@@ -169,7 +169,14 @@ huge huge::operator-(const huge & rhs) const
             temp.numdigits++;
             i++;
         }
-        temp.sign = 1;
+        if (temp.numdigits == 1 && temp.digits[0] == 0)
+        {
+            temp.sign = 0;
+        }
+        else
+        {
+            temp.sign = 1;
+        }
        // cerr << "\nTemp = " << temp;
     }
     else if (rhs > *this && (sign == 1 && rhs.sign ==1))
@@ -309,180 +316,62 @@ huge huge::operator*(const long & rhs) const
     return *this * hrhs;
 }
 
-huge huge::operator/(const huge & rhs) const
+huge huge::operator/(const huge & divisor) const
 {
-    huge returnval, temp;
-    short holder; 
-    temp = *this;
-    //returnval = static_cast<long>(1);
-    //cerr << "\nDivision passed *this = ";
-    //this->print(std::cerr);
-   // cerr << " and rhs = ";
-    //rhs.print(std::cerr);
-    //cin.ignore(INT_MAX, '\n');
-   // cerr << "\nTemp = " << temp;
-   // cerr << "\nReturnval + temp = " << returnval +temp;
-    if (rhs > *this)
+    huge tempdividend, tempremainder, 
+         tempquotient, quotient;
+    tempremainder = static_cast<long>(0);
+    for (size_t i = numdigits; i>0; i--)
     {
-        returnval = static_cast<long>(0);
-    }
-    else if (sign == 1 && rhs.sign == 1)
-    {
-         //cerr << "\nDivision both operands are positive";
-         // cerr << "\nThis - rhs = " << *this-rhs;
-        //cerr << "\nRhs*returnval = " << rhs*returnval;
-        if (rhs.numdigits == 1)
+        tempdividend = tempremainder.append(digits[i-1]);
+        tempquotient = static_cast<long>(10);
+        while((divisor * tempquotient) > tempdividend)
         {
-           // cerr << "\nGot into the right branch at least...";
-            size_t i = numdigits-1;
-           // cerr << "\nDividing " << static_cast<char>(digits[i]+'0');
-          //  cerr << " and " << static_cast<char>(rhs.digits[0]+'0');
-           // cerr << " which = " << static_cast<char>((digits[i]/rhs.digits[0])+'0');
-            returnval.digits[i] = digits[i]/rhs.digits[0];
-          //  cerr << " msb in returnval: " << static_cast<char>(returnval.digits[i]+'0');
-            holder = digits[i] % rhs.digits[0];
-            while (i > 0)
-            {
-                holder = (holder*BASE) + digits[i-1]; 
-                returnval.digits[i-1] =  holder / rhs.digits[0];
-                holder = holder % rhs.digits[0];
-                i--;  
-            }
-            returnval.numdigits = numdigits;
-            i = numdigits-1;
-            while (returnval.digits[i] == 0)
-            {               
-                returnval.numdigits--;
-                i--;
-            }
-            returnval.sign = 1;
-            
+            //cerr << "\n" << (divisor*tempquotient) << " is greater than " << tempdividend;
+            tempquotient--;
         }
-        else
-        {
-            while (!(rhs > temp)) 
-            {
-                temp = temp-rhs;
-                returnval = returnval+static_cast<long>(1);    
-            //cerr << "\nreturnval = " << returnval;
-            //cerr << "\nrhs*returnval = " << rhs * returnval;
-            //cerr << "\nThis - rhs = " << *this-rhs;
-            //cin.ignore(INT_MAX, '\n');
-            }
-        }
+        quotient.append(tempquotient.digits[0]);
+        //cerr << "\nAppending: " << tempquotient.digits[0];
+        tempremainder = tempdividend - (tempquotient*divisor);
     }
-    else if (sign == -1 && rhs.sign == -1)
-    {
-        while (*this - rhs > rhs * returnval )
-        {
-            returnval = returnval+temp;     
-            //cerr << "\nreturnval = " << returnval;
-        }
-    }
-    
-    return returnval;
+    quotient.sign = (sign == divisor.sign) ? 1 : -1;
+    return quotient;
 }
-vector<huge> readWord(string word)
-{
-    vector<huge> returnvec;
-    huge temp;
-    long longtemp;
-    vector<huge>::size_type i;
-    //cerr << "\nChar Max: " << setbase(16) << UCHAR_MAX;
-   // cerr << "\nLong Max: " << LONG_MAX;
-   // cerr << setbase(0) << "\nChar Max: " << UCHAR_MAX;
-  //  cerr << "\nLong Max: " << LONG_MAX;
-    for(i=0; i<word.size(); i+=3)
-    {
-        cerr << "\nBack in loop?";
-       /*longtemp = (static_cast<long>(word[i])<<16);
-        if (i+1 > word.size()-1)
-        {
-            i++;
-        }
-        else
-        {
-            longtemp+=static_cast<long>(word[i+1]);
-        }*/
-       
-        longtemp = static_cast<long>((word[i]&0xFF)<<16);
-       //cerr << "\nletter is: ";
-        //cerr << setbase(16) << longtemp;
-       //longtemp<<=16;
-       // cerr << "\nshifted by 8: ";
-     //   cerr << longtemp;           
-        if (i+1 <= word.size())
-        {         
-            longtemp += static_cast<long>((word[i+1]&0xFF)<<8);
-            //longtemp<<=8;
-        }
-        cerr << "\nletters 1 and 2 are: ";
-        //cerr << setbase(16) << longtemp;
-      
-        //cerr << "\n1 and 2 shifted over 8: ";
-       //cerr << longtemp;
-        if (i+2 <= word.size())
-        {
-           // cerr << "\nthird Char: " << static_cast<int>(word[i+2]);
-            longtemp += static_cast<long>(word[i+2]&0xFF);
-        }
-        /*longtemp<<=8;
-        cerr << "\n1, 2, and 3 altogether: ";
-        cerr << longtemp;*/
 
-         //cerr << setbase(16) << longtemp;
-       // cerr << "\nShifted over 16 bits and masked: " << ((longtemp>>16)&0xFF);
-       // cerr << "\nAs char: " << static_cast<unsigned char>((longtemp>>16)&0xFF);
-       // cerr << "\nShifted 8 bits and masked: " << ((longtemp>>8)&0xFF);
-       // cerr << "\nAs char: " << static_cast<unsigned char>((longtemp>>8)&0xFF);      
-       // cerr << "\n0just masked: " << (longtemp&0xFF);
-        //cerr << "\nAs char: " << static_cast<unsigned char>(longtemp&0xFF);
-        //cerr << "\nShifted over 8 bits: " << (longtemp>>8);
-        
-        
-        /*cerr << "\nFF0000 bit masked: " << ((longtemp)&0xFF0000);
-        //cerr << "\nshifted back 8 and masked: " << ((longtemp)&0xFF00>>8);
-        //cerr << "\nshifted back 8: " << ((longtemp)>>8);
-       // cerr << "\nCombined with upper 16 masked as a char: " << static_cast<unsigned char>((longtemp+longtemp2)&0x00FF);
-       //  cerr << "\nCombined shifted back down: " << static_cast<char>((longtemp+longtemp2)>>8);
-         //cerr << "\nCombined upper 16 masked: " << static_cast<char>(longtemp&0x00FF);
-        //cerr << "\nFirst Letter: " << c1;
-        //cerr << "\nSecond Letter: " << c2;*/
-        temp = longtemp;
-       // cerr << "\nPast assignment?";
-        returnvec.push_back(temp); 
-        //cerr << "\nBelow push_back?";
+huge readWord(string word)
+{
+    huge temp;
+    char hundreds, tens, ones;
+    for(short i=0; i<word.size(); i++)
+    {
+        hundreds = word[i] / 100;
+        tens = (word[i] % 100) / 10;
+        ones = word[i] % 10;
+        temp.append(hundreds);
+        temp.append(tens);
+        temp.append(ones);
+
     }
-    cerr << "\nOut of loop?";
-    return returnvec;
+    return temp;
 }
-string printWord(vector<huge> huges)
+string printWord(const huge h)
 {
     string temp;
-    unsigned char c1, c2, c3;
-    long templong; 
-    vector<huge>::size_type v;
-    for(v=0; v<huges.size(); v++)
+    huge temph = h;
+    char swp;
+    char tempChar, hundreds, tens, ones;
+    while(temph.get_size() != 0)
     {
-        templong = huges[v].toLong();
-        c1 = static_cast<unsigned char>((templong>>16)&0xFF);
-        //cerr << "\nencrypted chars as long: ";
-       // cerr << setbase(16) << templong;
-        cerr << "\nchar 1: " << c1;
-        c2 = static_cast<unsigned char>((templong>>8)&0xFF);
-        cerr << "\nchar 2: "  << c2;
-       // cerr << "\nSecond char with upper 8 masked: " << (huges[v].toLong()&0x00FF);
-        c3 = static_cast<unsigned char>(templong&0xFF);
-        cerr << "\nchar 3: " << c3;
-        temp+=c1;
-        temp+=c2;
-        temp+=c3;
-        
+        tempChar = temph.lsb_pop();
+        tempChar += (temph.lsb_pop()*10);
+        tempChar += (temph.lsb_pop()*100);
+        temp+=tempChar;
     }
-   // cerr << "\nTemp: " << temp << '\n';
-    for (string::size_type i=0; i<temp.size(); i++)
+    for(short i=0, j=temp.size()-1; i<=(temp.size()/2), j>=(temp.size()/2); i++, j--)
     {
-        cerr << setbase(16) << temp[i];
+        swp = temp[i];
+        temp[i] = temp[j];
+        temp[j] = swp;
     }
     return temp;
 }

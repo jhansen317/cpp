@@ -1,10 +1,11 @@
+
 #ifndef HUGE_H
 #define HUGE_H
 #include <cmath>
 #include <string>
 #include <vector>
 
-const size_t MAX_DIGITS = 100;
+const size_t MAX_DIGITS = 10000;
 
 const short BASE = 10;
 
@@ -264,108 +265,111 @@ public:
         huge hrhs = rhs;
         return *this+hrhs;
     }
+    char lsb_pop(void)
+    {
+        char returnChar = digits[0];
+        short i;
+        for (i = 1; i<numdigits; i++)
+        {
+            digits[i-1] = digits[i]; // shift everything toward LSB
+        }
+        if (numdigits > 0)
+            numdigits--;
+
+//        std::cerr << "\nreturnChar is " << static_cast<char>(returnChar+'0');
+        return returnChar;
+    }
+    huge append(const char & digit)
+    {
+        if (numdigits == 0)
+        {
+            if (digit == 0)
+            {
+                numdigits++;
+            }
+            else
+            {
+                numdigits++;
+                sign = 1;
+                digits[0] = digit;
+            }
+            
+        }
+        else if (numdigits == 1 && digits[0] == 0 && digit == 0)
+        {
+            return *this;
+        }
+        else if (numdigits == 1 && digits[0] == 0 && digit > 0)
+        {
+            digits[0] = digit;
+            sign = 1;
+        }        
+        else
+        {
+            for (size_t i = numdigits; i > 0; i--)
+            {
+                digits[i] = digits[i-1];
+            }
+            digits[0] = digit;
+            sign = 1;
+            numdigits++;
+        }
+        return *this;
+    }
     huge operator-(const huge & rhs) const;
     huge operator-(const long & rhs) const;
     huge operator*(const long & rhs) const;
     huge operator*(const huge & rhs) const;
-
+    huge operator--(int)
+    {
+        *this = *this - static_cast<long>(1);
+        return *this;
+    }
     bool operator>(const huge & rhs) const
     {
         bool returnval = false;
-        size_t i = numdigits-2;
-       // std::cerr << "\nOperator > passed *this = ";
-      //  this->print(std::cerr);
-        //std::cerr << " and rhs = ";
-       // rhs.print(std::cerr);
-      //  std::cerr << '\n';
-       // std::cerr << "\nleft hand digits = " << numdigits;
-        //std::cerr << "\nright hand digits = " << rhs.numdigits;
-       // std::cerr << "\nleft hand sign = " << static_cast<char>(sign+'0');
-       // std::cerr << "\nright hand sign = " << static_cast<char>(rhs.sign+'0');
+        size_t i;
         if (*this == rhs)
         {
-           // std::cerr << "\nPre test for equality";
-            returnval = false;
+            return false;
         }
-        else if ((numdigits == rhs.numdigits) && 
-                 (digits[numdigits-1] == rhs.digits[rhs.numdigits-1]) 
-                   && (sign == 1 && rhs.sign == 1))
+        else if (sign == 1 && rhs.sign == 1)
         {
-          //  std::cerr << "\nfirst if in > operator";
-            while (digits[i] == rhs.digits[i] && i != 0 )
+            if (numdigits == rhs.numdigits)
             {
-             //   std::cerr << "\nComparing left hand digit: " 
-                 //         << static_cast<char>(digits[i] + '0');
-            //    std::cerr << " and right hand digit: " << static_cast<char>(rhs.digits[i] + '0');
-                i--;
-            }
-            if (digits[i] <= rhs.digits[i])
-            {
-                returnval = false;
+                i = numdigits-1;
+                while (i != 0 && digits[i] == rhs.digits[i])
+                {
+                   i--;
+                }
+                return (digits[i] > rhs.digits[i]);
             }
             else
             {
-                returnval = true; 
-            }                     
-        }
-        else if ((numdigits == rhs.numdigits) && 
-                 (digits[numdigits-1] > rhs.digits[rhs.numdigits-1])
-                 && (sign == 1 && rhs.sign == 1) )
-        {
-           // std::cerr << "\nthird if in > operator";
-            returnval = true;
-        }
-        else if (numdigits > rhs.numdigits && sign == 1 && rhs.sign == 1)
-        {
-           // std::cerr << "\nsecond if in > operator?";
-            returnval = true;
-           // std::cerr << "\n>function is true in first branch...";
-        }
-        
-        
-        else if (sign == 1 && rhs.sign == -1)
-        {
-           // std::cerr << "\nfourth if in > operator";
-            returnval = true;
-        }
-        else if (sign == 1 && rhs.sign == 0)
-        {
-           // std::cerr << "\nfifth if in > operator";
-            returnval = true;
-        }
-        else if (sign == -1 && rhs.sign == 1)
-        {
-            //std::cerr << "\nsixth if in > operator";
-            returnval = false;
-        }
-        else if(numdigits > rhs.numdigits && sign == -1
-                           && rhs.sign == -1)
-        {
-            //std::cerr << "\nseventh if in > operator";
-            returnval = false;
-        } 
-        else if (numdigits == rhs.numdigits && 
-                 digits[numdigits-1] == rhs.digits[rhs.numdigits-1] 
-                   && sign == -1 && rhs.sign == -1)
-        {
-            while (digits[i] == rhs.digits[i] && i != 0 )
-            {
-                //std::cerr << "\nComparing left hand digit: " 
-                 //         << static_cast<char>(digits[i] + '0');
-                //std::cerr << " and right hand digit: " << static_cast<char>(rhs.digits[i] + '0');
-                i--;
+                return (numdigits > rhs.numdigits);
             }
-            if (digits[i] <= rhs.digits[i])
+        }
+        else if (sign == -1 && rhs.sign == -1)
+        {
+            if (numdigits == rhs.numdigits)
             {
-                returnval = true;
+                i = numdigits-1;
+                while (digits[i] == rhs.digits[i] && i != 0 )
+                {
+                   i--;
+                }
+                    return !(digits[i] > rhs.digits[i]);
             }
             else
             {
-                returnval = false; 
-            }                     
-        }
+                return !(numdigits > rhs.numdigits);
+            }
 
-        //std::cerr << "\nOr in huge > huge??";
+        }
+        else if (sign != rhs.sign)
+        {
+            return (sign > rhs.sign);
+        }
         return returnval;
     }
     bool operator>(const long & rhs) const
@@ -403,6 +407,10 @@ public:
         }
         return returnval;
     }
+    bool operator!=(const huge & rhs) const
+    {
+        return !(*this == rhs);
+    }
     bool operator==(const short & rhs) const
     {
         huge hrhs; 
@@ -416,15 +424,16 @@ public:
         return *this == hrhs;
     }
     huge operator/(const huge & rhs) const;
-    huge operator/(const long & rhs) const
+    /*huge operator/(const long & rhs) const
     {
         huge hrhs;
         hrhs = rhs;
         return *this/hrhs;
-    }
+    }*/
     huge operator%(const huge & rhs) const
     {   
-       // huge holder;
+        //return *this - (rhs * (*this/rhs));
+        huge holder;
         if (rhs == static_cast<long>(1) || 
            (rhs == static_cast<long>(2) && digits[0] % 2 == 0))
         {
@@ -469,8 +478,8 @@ public:
 
 std::istream & operator>>(std::istream & in, huge & num);
 std::ostream & operator<<(std::ostream & out, const huge & num);
-std::vector<huge> readWord(std::string word);
-std::string printWord(std::vector<huge> huges);
+huge readWord(std::string word);
+std::string printWord(const huge h);
 #endif        //  #ifndef HUGE_H
 
 

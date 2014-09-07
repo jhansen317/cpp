@@ -9,9 +9,12 @@
 
 using namespace std;
 
-huge N = huge("14014621");
-huge e = huge("3709");
-huge d = huge("898813");
+/*huge N = huge("26797");
+huge e = huge("13379");
+huge d = huge("11099");
+huge N = huge("289589987027694038837");
+huge e = huge("123456791");
+huge d = huge("266023389946776676079")*/
 
 inline unsigned long rand_range(unsigned long min, unsigned long max)
 {
@@ -19,9 +22,9 @@ inline unsigned long rand_range(unsigned long min, unsigned long max)
 }
 huge modexp(const huge & x, const huge & n, const huge & p);
 
-unsigned long bigprime(unsigned long min, unsigned long max);
+void bigprime(huge & p);
 
-bool isPrime(unsigned long & n);
+bool isPrime(huge & n);
 
 void bettergcd(const huge & a, const huge & b, huge & x, huge & y);
 
@@ -33,73 +36,68 @@ int main(void)
     vector<huge> hugecont, cryptovec, decryptovec,transfervec;
     vector<huge>::size_type v;
     string M;
-    //huge p, q, N, Np, e, d, R, dM, one; 
+    vector<string>::size_type ssize;
+    vector<string> stringvec, decodevec;
+    huge toencrypt, todecrypt, bigP;
+    huge p, q, N, Np, e, d, R, dM, one; 
     //long tempp, tempq, tempe;
     //one = static_cast<const long>(1); 
-    //tempp = bigprime(SHRT_MAX, USHRT_MAX);
-   // cout << "\nTrying to store " << tempp << " in huge p";
-    //p = tempp;
-   // tempq = bigprime(SHRT_MAX, USHRT_MAX);
-   // cout << "\nTrying to store " << tempq << " in huge q";
+    p = huge("100000000000000000151");
+    //bigprime(p);
+    cout << "\np is now " << p;
+    q = huge("100000000000000000129");
+    //bigprime(q);
+    //tempq = bigprime(SHRT_MAX, USHRT_MAX);
+    cout << "\nq is now " << q;
    // q = tempq;   
-   // N = p*q; 
-   // cerr << "\np * q = " << N;
-    //cerr << "\np-1 = " << p-one;
-   // cerr << "\nq-1 = " << q -one;
-   // Np = (p-one)*(q-one);
-   // cerr << "\nAnd Np = " << Np;
+    N = p*q; 
+   // N = huge("5000000064000000203");
+    cerr << "\np * q = N = " << N;
+    p--;
+    q--;
+    cerr << "\np-1 = " << p;
+    cerr << "\nq-1 = " << q;
+    Np = p*q;
+    cerr << "\nAnd Np = " << Np;
   //  cin.ignore(INT_MAX, '\n');
    // tempe = bigprime(SHRT_MAX, USHRT_MAX);
-   // e = tempe;
-   // cerr << "\ne is : " << e;
+    e = huge("100000000000000000039");
+     //bigprime(e);
+    cerr << "\ne is : " << e;
    // cin.ignore(INT_MAX, '\n');
-   // d = minverse(e, Np);
+    d = minverse(e, Np);
+    //d = huge("199679738338703423");*/
+    cout << "\nN = " << N << "\ne = " << e << "\nd = " << d << '\n';
     
-    //cout << "\np = " << p << "\nq = " << q << "\nN = " << N << "\nNp = " << Np;
-   // cout << "\ne = " << e << "\nd = " << d << '\n';
-    
-    cout << "\nChoose a word to ENCRYPT: ";
-    getline(cin, M);
-    cin.ignore(INT_MAX, '\n');
-    hugecont = readWord(M);
-    cout << "\nLets try printing: ";
-    cout << printWord(hugecont);
+    cout << "\nEnter a word to ENCRYPT: ";
+    //getline(cin, M);
+    cin >> M;
+    toencrypt = readWord(M);
+    cout << "\ntoencrypt = " << toencrypt;
     cout << "\nWorking on it.";
-    for(v=0; v<hugecont.size(); v++)
-    {
-        cryptovec.push_back(modexp(hugecont[v], e, N));
-    }
+    todecrypt = modexp(toencrypt, e, N);
+    cout << "\nEncrypted Message: " << todecrypt << '\n';
+    toencrypt = modexp(todecrypt, d, N);
+    M = printWord(toencrypt);
     
-   // R = modexp(M, e, N);
-    M = printWord(cryptovec);
-    cout << "\nEncrypted word is: " << M << '\n';
-    transfervec = readWord(M);
-    
-    for(v=0; v<transfervec.size(); v++)
-    {
-        decryptovec.push_back(modexp(transfervec[v], d, N));
-    }
-    
-    M = printWord(decryptovec);
-    
-    cout << "\nDecrypted integer is: " << M << '\n';
+    cout << "\nDecrypted Message: " << M << '\n';
    
-    
     return 0; 
+    
 }
 
 
 
-bool isPrime(unsigned long & n)
+bool isPrime(huge & n)
 {
-    unsigned long i=3; 
-    if (n % 2 == 0)
+    huge i=static_cast<long>(3); 
+    if ((n % static_cast<long>(2)) == static_cast<long>(0))
     {
         return false;
     }
-    while (i * i <= n && n % i != 0)
+    while (n > i * i && n % i != static_cast<long>(0))
     {
-        i += 2; 
+        i = (i + static_cast<long>(2)); 
     }
     
     return i*i > n;
@@ -111,30 +109,30 @@ huge modexp(const huge & x, const huge & n, const huge & p)
     {
         return static_cast<long>(1); 
     }
-   //  cerr << "\nn = " << n;
-    // cerr << "\nx = " << x;
-     //cerr << ".";
-    //cerr << "\nx * x = " << x*x;
-   // cerr << "\nx*x%p = " << x*x%p;
-   // cerr << "\nn/2 = " << n/static_cast<long>(2);
-//    cin.ignore(INT_MAX, '\n');
+     cerr << "\nn = " << n;
+     cerr << "\nx = " << x;
+     cerr << ".";
+     cerr << "\nx * x = " << x*x;
+     cerr << "\nx*x%p = " << (x*x)%p;
+     cerr << "\nn/2 = " << n/static_cast<long>(2);
+//    cin.ignore(INT_MAX, '\n'); 
     temp = modexp((x*x) % p, n/static_cast<long>(2), p);
-    //cerr << "\nN = " << n << " mod 2 = " << n % static_cast<long>(2);
-    if (!(n % static_cast<long>(2) == static_cast<long>(0)))
+    cerr << "\nN = " << n << " mod 2 = " << n % static_cast<long>(2);
+    if (!((n % static_cast<long>(2)) == static_cast<long>(0)))
     {
         temp = (temp*x) % p;
     }
     return temp; 
     
 }
-unsigned long bigprime(unsigned long min, unsigned long max)
+void bigprime(huge & p)
 {
-    unsigned long val = rand_range(min, max);
-    while(!isPrime(val))
+    //huge val = huge("10000000000");
+    while(!isPrime(p))
     {
-        val = rand_range(min, max);
+        p = (p + static_cast<long>(1));
     }
-    return val;
+    return;// val;
 }
 void bettergcd(const huge & a, const huge & b, huge & x, huge & y)
 {
