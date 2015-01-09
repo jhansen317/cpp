@@ -90,14 +90,14 @@ int main(void)
 
 bool isPrime(huge & n)
 {
-    huge i=static_cast<long>(3); 
-    if ((n % static_cast<long>(2)) == static_cast<long>(0))
+    huge i=3; 
+    if (huge((n % 2)) == int(0))
     {
         return false;
     }
-    while (n > i * i && n % i != static_cast<long>(0))
+    while (n > i * i && n % i != 0)
     {
-        i = (i + static_cast<long>(2)); 
+        i = (i + 2); 
     }
     
     return i*i > n;
@@ -105,20 +105,20 @@ bool isPrime(huge & n)
 huge modexp(const huge & x, const huge & n, const huge & p)
 {
     huge temp;
-    if (n==static_cast<long>(0))
+    if (n==0)
     {
-        return static_cast<long>(1); 
+        return 1; 
     }
-     cerr << "\nn = " << n;
+     /*cerr << "\nn = " << n;
      cerr << "\nx = " << x;
      cerr << ".";
      cerr << "\nx * x = " << x*x;
      cerr << "\nx*x%p = " << (x*x)%p;
-     cerr << "\nn/2 = " << n/static_cast<long>(2);
+     cerr << "\nn/2 = " << n/2;*/
 //    cin.ignore(INT_MAX, '\n'); 
-    temp = modexp((x*x) % p, n/static_cast<long>(2), p);
-    cerr << "\nN = " << n << " mod 2 = " << n % static_cast<long>(2);
-    if (!((n % static_cast<long>(2)) == static_cast<long>(0)))
+    temp = modexp((x*x) % p, n/2, p);
+    //cerr << "\nN = " << n << " mod 2 = " << n % static_cast<long>(2);
+    if (!((n % 2) == 0))
     {
         temp = (temp*x) % p;
     }
@@ -136,37 +136,20 @@ void bigprime(huge & p)
 }
 void bettergcd(const huge & a, const huge & b, huge & x, huge & y)
 {
-    huge x1, y1, zero, one;
-    zero = static_cast<long>(0);
-    one = static_cast<long>(1);
-    if (b == zero)
+    huge x1, y1;
+    if (b == 0)
     {
-        x = one;
-        y = zero;
+        //cerr << "Right before assignment\n";
+        x = 1;
+        y = 0;
     }
     else 
     {
- 
-        //cerr << " ,x =" << x << " and y = " << y;
-       // cerr << "\nAbout to go down the rabbit hole again...";
-       // cerr << "\nAbout to pass " << a << " % " << b;
-      //  cin.ignore(INT_MAX, '\n');
-      //  cerr << "\nThe result of which is: " << a % b;
-       //cin.ignore(INT_MAX, '\n');
+        //cerr << "Right before recursive call\n";
+        //cerr << "Passing b=" << b << " and a=" << a << "and y1=" << y1 << "and x1=" << x1 << "\n";
         bettergcd(b, a % b, x1, y1);
-     //   cerr << "\nout of recursive call?";
-     //   cin.ignore(INT_MAX, '\n');
-     //   cerr << "\nx1 = " << x1 << " and y1 =" << y1;
-     //  cerr << "\nx = " << x << " and y = " << y;
         x = y1;
-     //   cin.ignore(INT_MAX, '\n');
-    //  cerr << "\ny = " << y;
-       // cerr << '\n' << x1 << " - (" << a << '/' << b << ") *" << y1;
-     //   cerr << '\n' << x1 << " - " << a/b << " * " << y1;
-     //   cerr << '\n' << x1 << " - " << (a/b) * y1;
-        y = x1 - (a/b) * y1;
-   //    cerr << "\nnow y = " << y;
-    //   cerr << "\nand x = " << x;
+        y = (x1 - (a/b) * y1);
     }
     return;
 }
@@ -176,5 +159,5 @@ huge minverse(const huge & a, const huge & n)
     huge x, y;
     
     bettergcd(a, n, x, y);
-    return x > static_cast<long>(0) ? x : x + n;
+    return x > 0 ? x : x + n;
 }

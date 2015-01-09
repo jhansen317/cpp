@@ -1,0 +1,599 @@
+#!/usr/bin/perl -w    # on linux/cygwin
+# !/usr/contrib/bin/perl -w  # on HP/UX
+
+# not ready for perl -T yet...
+
+use strict;
+
+# JCJ:  New version in Perl (5.6.x or higher)
+# ToDo:
+#   5 min  - --numbered option
+#   5 min  - --tabs option (and other style concerns?)
+#   ??     - clean script backspaces, arrows, etc. and get
+#            the ANSI escapes to pass properly to:
+#   15 min - --ps option  (enscript -l or -L#, a2ps, mpage, nup, etc.)
+#   5 min  -    --2up option
+#   5 min  -    --duplex option
+#   1 hr   - finish testing escape_special
+#   30 min - maybe a remove_extra_escapes function?  (?!?)
+#   1 day  - get pr to insert ff's after page mark
+#            (or do it myself!)
+#   *      - redo pr and fmt in perl functions
+#            (see word_wrap C++ function elsewhere)
+#   1 day  - POD docs at end...
+#   ??     - pass thru --help to compiler?!
+#   ??     - have IT install ~latest~ version on mars
+#   ??     - compiler, etc. configuration through a ~/.CPPrc file?
+#            (we don't really need aCC any more, but there ~are~ other
+#            compilers out there that ~somebody~ might want to use...)
+
+my $PROG_NAME = substr($0, rindex($0,'/')+1);
+my $VERSION = "1.221";  # internal version
+my $LISTFILE = 100;     # file handle for listing file
+my $do_listing = 0;     # should we print up a listing?
+my $listing = '';       # name of listing file (named after main if found)
+my $cprogs = '';        # list of C++ program files
+my $do_clean = 0;       # should we clean up .o files?
+my $objs = '';          # list of object files if cleaning requested
+my $had_main = 0;       # was there a main program?
+my $headers = '';       # list of headers specified or found
+my $opts = '';          # list of user's compiler options
+my $do_strip = 0;       # should we strip the executable?
+my $do_grep = 1;        # should we grep out the standard library messages?
+my $exe_name = '';      # name of generated executable (for stripping)
+
+# object file extension (may change if you use this on DOS/Win)
+   my $obj_ext = '.o';
+
+# compiler to use
+   # my $compiler = 'aCC';    # HP/UX native compiler -- it sucks, though
+   my $aCC_clean = '';
+   my $compiler = 'g++';
+   my $gcc_clean = '|grep -E -v "^/usr|^/opt|^ccc_|boost"';
+   #
+   # the gcc_clean was originally needed because of an incompatibility between
+   # gcc and the HP provided header files.  GNU claims this is HP's fault and
+   # they can't fix it.  I don't get it since it is coming from their
+   # interface file...*shrug*
+   #
+   # it is also useful to suppress messages about the library files generated
+   # by the effc++ warning enabled below.
+   #
+   # now it can be used to rip out messages about using boost in data
+   # structures and the Horstmann ccc_* packages for Big C++, too.
+   #
+   #my $horst_clean = '|grep -v "^ccc_"';
+   my $horst_clean = '';    # using -E and |, this is no longer needed, but...
+   my $clean = $gcc_clean;
+
+# Compiler Arguments:
+#   -- all warnings
+#   -- aCC needs DAportable to suppress a stupid message.
+   # my $comp_args = '+DAportable -Aa';   # for aCC
+   my $aCC_args = '+DAportable -Aa';   # for aCC
+
+#   -- g++ has many more useful warnings (especially for teaching);
+#      requires g++ version 3.x or higher
+   my $gcc_args = '-ansi -Wall -W -Wfloat-equal -Winline -Wunreachable-code '.
+                  '-Wredundant-decls -Wconversion -Wwrite-strings -Wcast-qual '.
+                  '-Woverloaded-virtual -Weffc++ -fno-gnu-keywords -pedantic '.
+                  '-fmessage-length=0';
+# Instructors *NOT* wishing to follow the standard may want to have their
+# students use '-Wno-deprecated' as well.  This can be passed thru on the CPP
+# command line.
+
+# these two arguments are necessary to compile with the Horstman X graphics
+# packages (121 & 122 ...) and with the Boost libraries (216 sometime?)
+   my $horst_args = ''; # '-lX11 -L/usr/X11R6/lib';
+   my $boost_args = ''; # '-I/usr/include/boost-1_33_1';
+   my $comp_args = $gcc_args;
+
+# check $arg against added extensions (for C++, library interface, object
+# files, and template definition files)...
+sub check_exts {
+    my $arg = shift;   # potential file
+    my $cp = shift;    # cprogs so far
+    my $h = shift;     # headers so far
+    my $o = shift;     # opts so far
+    # C++ files -- anybody know of any other extensions that are in
+    # use/popular?
+    if (-e "$arg.C" || -e "$arg.cpp" || -e "$arg.cc" || -e "$arg.CC")
+    {
+        if (-e "$arg.C")
+        {
+            $cp .= ";$arg.C";
+        }
+        elsif (-e "$arg.cc")
+        {
+            $cp .= ";$arg.cc";
+        }
+        elsif (-e "$arg.CC")
+        {
+            $cp .= ";$arg.CC";
+        }
+        else
+        {
+            $cp .= ";$arg.cpp";
+        }
+        # definitions for template separation -- .tem, ??
+        if (-e "$arg.def")
+        {
+            $h .= ";$arg.def";
+        }
+        if (-e "$arg.tmpl")  # should this elsif?
+        {
+            $h .= ";$arg.tmpl";
+        }
+        # associated .h file for library -- any other extensions..?
+        if (-e "$arg.h")
+        {
+            $h .= ";$arg.h";
+        }
+        elsif (-e "$arg.HH")
+        {
+            $h .= ";$arg.HH";
+        }
+        elsif (-e "$arg.hh")
+        {
+            $h .= ";$arg.hh";
+        }
+        elsif (-e "$arg.hpp")
+        {
+            $h .= ";$arg.hpp";
+        }
+        elsif (-e "$arg.H")
+        {
+            $h .= ";$arg.H";
+        }
+    }
+    elsif (-e "$arg.h")    # lone .h file (hope it's all template or inline!)
+    {
+        $h .= ";$arg.h";
+    }
+    elsif (-e "$arg.HH")
+    {
+        $h .= ";$arg.HH";
+    }
+    elsif (-e "$arg.hh")
+    {
+        $h .= ";$arg.hh";
+    }
+    elsif (-e "$arg.hpp")
+    {
+        $h .= ";$arg.hpp";
+    }
+    elsif (-e "$arg.H")
+    {
+        $h .= ";$arg.H";
+    }
+    elsif (-e "$arg.def")    # lone definitions file (how weird...)
+    {
+        $h .= ";$arg.def";
+    }
+    elsif (-e "$arg.tmpl")
+    {
+        $h .= ";$arg.tmpl";
+    }
+    else                     # *shrug*  must be an option...
+    {
+        $o .= " $arg";
+    }
+    return ($cp, $h, $o);
+}
+
+# gather arguments -- compiler options, my options,
+#                     C++ source files, interface files
+while (@ARGV != 0)
+{
+    my $arg = shift;
+# later look for --numbered, etc.
+    if ($arg eq "--listing")
+    {
+        $do_listing = 1;
+    }
+    elsif ($arg eq "--raw")
+    {
+        $do_grep = 0;
+    }
+    elsif ($arg eq "--clean")
+    {
+        $do_clean = 1;
+    }
+    elsif ($arg eq "--strip")
+    {
+        $do_strip = 1;
+    }
+    elsif ($arg eq "--version")
+    {
+        print "This is $PROG_NAME version $VERSION";
+        printf " executing under perl v%vd", $^V;
+        print " and compiling with:\n\n";
+        print `$compiler --version`;
+        print "\n";
+        exit;
+    }
+    elsif ($arg eq "--help")
+    {
+        print "Syntax:  $PROG_NAME [opts] C++-file [C++-file ...]\n\n";
+        print "Options:\n\t--help\t\t\tThis help screen.\n";
+        print "\t--version\t\tPrint versions for $PROG_NAME and $compiler and exit.\n";
+        print "\t--strip\t\t\tStrip debugging information from the executable.\n";
+        print "\t--clean\t\t\tErase temporary files after compilation.\n";
+        print "\t--raw\t\t\tDo not remove messages about the standard\n" .
+              "\t\t\t\tlibrary's errors/warnings.\n";
+        print "\t--listing\t\tCreate a listing file with [numbered] source\n" .
+              "\t\t\t\tfiles and all compiler messages.\n";
+        print "\t--compiler=CCC\t\tSet up for compiler CCC which can currently be\n" .
+              "\t\t\t\teither 'g++3' or 'g++4' for GNU's C++ compiler or 'acc' or\n" .
+              "\t\t\t\t'hp' for the HP/UX compiler, aCC.\n";
+        print "\t[compiler option]\tUnrecognized options are passed through to the\n" .
+              "\t\t\t\tchosen compiler 'as is'.\n\n";
+        print "C++ files can be .C, .cpp, .h, or .def files.  (An attempt ~is~ made to detect\n" .
+              "unmentioned/forgotten .h and .def files.)\n\n";
+        print "Please contact 'craie\@acm.org' for support of this product.\n";
+        exit;
+    }
+    elsif ($arg =~ m/^--compiler=/)
+    {
+        my $comp = lc(substr($arg,rindex($arg,'=')+1));
+        if ($comp eq 'a' || $comp eq 'acc' || $comp eq 'h' || $comp eq 'hp')
+        {
+            $compiler = 'aCC';
+            $comp_args = $aCC_args;
+            $clean = $aCC_clean;
+        }
+        elsif ($comp eq 'g++3' || $comp eq '3' || $comp eq 'g3')
+        {
+            $compiler = 'g++';
+            $comp_args = $gcc_args;
+            $clean = $gcc_clean;
+        }
+        elsif ($comp eq 'g++4' || $comp eq '4' || $comp eq 'g4')
+        {
+            $compiler = 'g++-4';
+            $comp_args = $gcc_args;
+            $clean = $gcc_clean;
+        }
+        else
+        {
+            print "Unknown compiler '$comp', ignoring request...\n"
+        }
+    }
+    elsif (-e $arg)
+    {
+        #print "\a\t'$arg' found to exist...\n";
+        my $ext = substr($arg,rindex($arg,'.'));
+        if ($ext ne '.C' && $ext ne '.cpp' && $ext ne '.cc' && $ext ne '.CC')
+        {
+            if ($ext eq '.h' || $ext eq '.H' || $ext eq '.hh' || $ext eq '.hpp'
+                || $ext eq '.HH')    # lone .h file
+            {
+                $headers .= ",$arg";
+            }
+            elsif ($ext eq '.def' || $ext eq '.tmpl') # lone definitions file
+            {
+                $headers .= ";$arg";
+            }
+            else  # see if the student had a 'file save' snafu and
+            {     # has a like-named no-extension version
+                ($cprogs, $headers, $opts) = check_exts($arg, $cprogs,
+                                                        $headers, $opts);
+            }
+        }
+        else  # C++ file!
+        {
+            $cprogs .= ";$arg";
+            my $cname = substr($arg,0,rindex($arg,'.'));
+            # has a header, too
+            if (-e "$cname.h")
+            {
+                $headers .= ";$cname.h";
+            }
+            elsif (-e "$cname.HH")
+            {
+                $headers .= ";$cname.HH";
+            }
+            elsif (-e "$cname.H")
+            {
+                $headers .= ";$cname.H";
+            }
+            elsif (-e "$cname.hpp")
+            {
+                $headers .= ";$cname.hpp";
+            }
+            elsif (-e "$cname.hh")
+            {
+                $headers .= ";$cname.hh";
+            }
+            # has a template definitions file, too
+            if (-e "$cname.def")
+            {
+                $headers .= ";$cname.def";
+            }
+            elsif (-e "$cname.tmpl")
+            {
+                $headers .= ";$cname.tmpl";
+            }
+        }
+    }
+    else  # see if it exists with an extension or if it's an option
+    {
+        ($cprogs, $headers, $opts) = check_exts($arg, $cprogs, $headers,
+                                                $opts);
+    }
+}
+# remove initial ',' from lists (if any)
+$headers = substr($headers,1) if ($headers ne '');
+$cprogs = substr($cprogs,1) if ($cprogs ne '');
+$opts = substr($opts,1) if ($opts ne '');
+
+# subprogram to split string, remove duplicates, and return sorted
+# array (all duplicates will be '' at beginning of result array)
+sub clean_array {
+    my @array = sort(split(/;/,shift));
+    my $i = 0;
+    while ($i < @array-1)
+    {
+        if ($array[$i] eq $array[$i+1])
+        {
+            $array[$i] = '';
+        }
+        $i++;
+    }
+    return sort(@array);
+}
+
+if ($cprogs ne '')
+{
+    # get C++ files individually...
+    my @cfiles = clean_array($cprogs);
+
+    # locate any main there might be...
+    my $dup = 1;
+    my $ind = 0;
+    my $ind_main;
+    my $len = scalar(@cfiles);
+    $ind++ while ($cfiles[$ind] eq '');   # skip duplicates from clean_array
+    while ($ind < $len)  # shouldn't need $len check above since they can't
+    {                    # ~all~ have been duplicates...*grin*
+
+        if (substr($cfiles[$ind],0,4) ne 'ccc_')  # student files cannot begin
+        {                                         # with ccc_!!!
+            if (`grep 'include.*boost' '$cfiles[$ind]' |wc -l` > 0)
+            {
+              # could also put in here logic to pull the actual library name
+              # from their #include since the library's binary names (no,
+              # there isn't just a single one) are as crappily chosen as the
+              # install directory for the include headers
+                $boost_args = '-I/usr/include/boost';  # this is for Boost 1.37
+            }                               # (and up?)
+                            # Boost 1.33 was installed in 'boost-1_33_1'!!
+                 # Hopefully students have the most recent version and this
+                 # won't affect them...
+                 #
+                 # I suppose I could ~just~ search the system for where boost
+                 # is installed and use the 'latest' versioned directory..?
+
+            # looking for a standard int main() or int main(void)
+            # (added the [ ]*'s to avoid finding students (poorly) using int
+            # and naming their function main* or *main)
+            # (changed [ ]* to [[:space:]]+/* since some students HAVE to have
+            # tabs imbedded in their code!)
+            # (also needed -E and that meant escaping the main ()'s)
+            #print "grep -E '^[[:space:]]*int[[:space:]]+main[[:space:]]*\\([^)]*\\)' '$cfiles[$ind]'\n";
+            #print `grep --color=always -E '^[[:space:]]*int[[:space:]]+main[[:space:]]*\\([^)]*\\)' '$cfiles[$ind]'`;
+            # damn double-slashing shit!!!
+            if (`grep -E '^[[:space:]]*int[[:space:]]+main[[:space:]]*\\([^)]*\\)' '$cfiles[$ind]' | wc -l` > 0)
+            {
+                if ($had_main)
+                {
+                    ++$dup;
+                    print "$cfiles[$ind]**$dup\n";  # indicates good, dupl main
+                }
+                else
+                {
+                    print "$cfiles[$ind]***\n";  # indicates good main
+                    $ind_main = $ind;
+                }
+                $had_main = 1;
+            }
+
+            # now we'll look for main heads without a return type (or
+            # hopefully it is just on the line above)  (The spacing bit
+            # is removed here to account for ccc_win_main's...)
+            elsif (`grep -E '^[[:space:]]*main[[:space:]]*\\([^)]*\\)' '$cfiles[$ind]' |wc -l` > 0)
+            {
+                if ($had_main)
+                {
+                    ++$dup;
+                    print "$cfiles[$ind].*$dup\n";  # indicates odd, dupl main
+                }
+                else
+                {
+                    print "$cfiles[$ind]..*\n";  # indicates odd main
+                    $ind_main = $ind;
+                }
+                $had_main = 1;
+            }
+
+            # I'm not allowing for returning non-int from main (unless they
+            # hide it on the line above the rest of the head, I suppose)
+            else
+            {
+                print "$cfiles[$ind]...\n";  # indicates non-main
+            }
+        }
+        else  # ccc_*.* are for/from the Horstmann library
+        {
+            print "$cfiles[$ind]...\n";  # indicates non-main (ccc_* are
+                              # Horstmann's libs although they will have a
+                 # main in the chosen platform)
+            if ($cfiles[$ind] =~ /x11/)   # if they want X display,
+            {                             #          get x library
+                $horst_args = '-lX11 -L/usr/X11R6/lib';
+            }
+            # we could also use some logic above to not make student know what
+            # library name to list on the CPP line just look for the types
+            # used and at the environment for x vs. a clues...
+            # *shrug*  Nah...
+        }
+        $ind++;
+    }
+    if ($had_main)
+    {
+        $listing = substr($cfiles[$ind_main],0,rindex($cfiles[$ind_main],'.'));
+
+        # name executable after main program include math library
+        $comp_args .= " -o '$listing.out' -lm";
+
+# need to check here that there was indeed any ccc_* included and that
+# there was indeed any boost/* included before wasting ours and the
+# students' time...
+#
+# should probably grep this while we're up in the loop looking for
+# a main...
+        $opts .= " $horst_args" . " $boost_args";
+
+        # to alleviate student confusion...remove old executable
+        unlink "$listing.out" if (-e "$listing.out");
+
+        # remember the executable name (just in case...)
+        $exe_name = "$listing.out";
+
+        # finalize listing file name -- need an extension!
+        $listing .= '.lst' if ($do_listing);
+
+        # get object filenames if cleaning requested...
+        if ($do_clean)
+        {
+            $ind = 0;
+            $ind++ while ($cfiles[$ind] eq '');
+            while ($ind < $len)
+            {
+                my $t = substr($cfiles[$ind],0,rindex($cfiles[$ind],'.'));
+                $objs .= " '$t"."$obj_ext'";
+                $ind++;
+            }
+            $objs = substr($objs,1) if ($objs ne '');
+        }
+
+    }
+    else
+    {
+        $listing = substr($cfiles[0],0,rindex($cfiles[0],'.')) . '.lst'
+                if ($do_listing);
+        $comp_args .= " -c";
+        print "No main found...simply generating .o files...\n";
+    }
+
+    if ($do_listing)
+    {
+        # remove old listing file if any -- not needed, but nicer..?
+        unlink($listing) if (-e $listing);
+
+        # connect to $listing for output
+        open LISTFILE , "> '"."$listing"."'" ;
+    
+        # print each program into listing file
+        my @hfiles = clean_array($headers);
+        $ind = 0;
+        $ind++ while ($cfiles[$ind] eq '');
+        while ($ind < $len)             # while there are more C++ programs
+        {
+            my $cprg = $cfiles[$ind];
+            my $cname = substr($cprg,0,rindex($cprg,'.'));
+            my @heads = grep(/^$cname/,@hfiles);
+            if (@heads)
+            {
+                # append $heads[0] into $listing
+                print LISTFILE `pr -n4 -l60 '$heads[0]'` .
+                                "\n~~~~~~~~~~~~~~~~\f\n";
+            }
+            # append $cprg into $listing
+            print LISTFILE `pr -n4 -l60 '$cprg'` .
+                            "\n----------------\f\n";
+
+            # take .h and .def out of list
+            foreach my $h (grep(/^$cname/,@hfiles))  # re-grep for reference
+            {                                        # to original for
+                $h = '';                             # overwriting/removal
+            }
+
+            $ind++;
+        }
+        $ind = 0;
+        $len = scalar(@hfiles);
+        while ($ind < $len)
+        {
+            if ($hfiles[$ind] ne '')   # .h or .def without .C
+            {
+                # append $hfiles[$ind] into $listing
+                print LISTFILE `pr -n4 -l60 '$hfiles[$ind]'` .
+                                "\n----------------\f\n";
+            }
+            $ind++;
+        }
+    }
+
+# escapes special characters before passing a string to
+# a shell command (with ``).  It appears that not all
+# special characters need escaping...
+sub escape_special {
+    my $line = shift;
+    $line =~ s/\\/\\\\/g;  # needed!
+    $line =~ s/\`/\\`/g;   # needed!
+    $line =~ s/\"/\\"/g;      # wonder if this is needed..?
+    $line =~ s/\$/\\\$/g;     # wonder if this is needed..?
+    # we apparently do *NOT* need to escape the following:
+    #   ! ' * ? & < > | ; ( ) [ ]
+    # they've all been 'tested' and found in students' output with an extra \
+    # in front of them...
+    return $line;
+}
+
+    # compile all C++ files.  place compiler output in variable.
+    my $clist = "'" . join("' '",@cfiles) . "'";
+    $clean .= $horst_clean;
+    $clean = '' if (!$do_grep);
+    my $comp_results = `$compiler $comp_args $clist $opts 2>&1 $clean`;
+    $comp_results = escape_special($comp_results);
+    my $clean_results = `echo "$comp_results" | fmt -72 -s`;
+
+    # show temporary results variable (append to .lst file)
+    print "$clean_results\n";
+
+    if ($do_listing)
+    {
+        $clean_results = escape_special($clean_results);
+        my $list_results = `echo "$clean_results" | pr -l60 -`;
+        print LISTFILE "Diagnostics:\n$list_results\n\f";
+        close LISTFILE;
+    }
+
+    # if they want it stripped down
+    if ($do_strip && $exe_name ne '')
+    {
+        # FUTURE:  should we gather diagnostics?
+        `strip $exe_name` if (-e $exe_name);
+    }
+
+    # clean up .o files if so requested (and there was a main)
+    if ($do_clean)
+    {
+        if ($had_main)
+        {
+            unlink $objs;
+        }
+        else
+        {
+            print "Cleaning skipped, since *.o was all that was " .
+                  "produced...\n";
+        }
+    }
+}
+else
+{
+   print "\n\aYou must supply me with at least one C++ file for this to " .
+         "work!\n\n\t(Currently, this includes *.C and *.cpp...)\n\n";
+}
+
