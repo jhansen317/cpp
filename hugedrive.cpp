@@ -12,11 +12,15 @@ int main(void)
     huge test, addend, sum, difference, fromlong, divisor, multiplicand;
     vector<huge> hugevec;
     string word;
-    /*cout << "\nLets try encoding a word as a vector of huges. Enter a word:";
+    cout << "\nLets try encoding a word as a vector of huges. Enter a word:";
     cin >> word;
-    hugevec = readWord(word);
-    //cout << '\n';
-    for (vector<huge>::size_type i=0; i<hugevec.size(); i++)
+    hugevec = strtohuge(word);
+
+	cout << "Now the inverse...\n";
+	word = hugetostr(hugevec);
+	cout << "Word is: " << word;
+    cout << '\n';
+    /*for (vector<huge>::size_type i=0; i<hugevec.size(); i++)
     {
         cout << hugevec[i] << '\n';
     }
@@ -63,7 +67,7 @@ int main(void)
         cout << '\n' << fromlong << " is less than " << sum;
     }
     cin.ignore(INT_MAX, '\n');
-    */
+    
     cout << "\nA greater than lhs: ";
     cin >> sum;
     cout << "\nGreater than rhs: ";
@@ -84,7 +88,7 @@ int main(void)
     cout << "\nDivision test: " << sum << '/' << divisor << " = " << fromlong;
     //fromlong = sum % divisor;
     //cout << "\nModulo test: " << sum << '%' << divisor << " = " << fromlong; 
-    
+    */
     cout << '\n';
     
     

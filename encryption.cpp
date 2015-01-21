@@ -42,10 +42,12 @@ int main(void)
     huge p, q, N, Np, e, d, R, dM, one; 
     //long tempp, tempq, tempe;
     //one = static_cast<const long>(1); 
-    p = huge("100000000000000000151");
+    //p = huge("6374856");
+    p = huge("562949953421381");
     //bigprime(p);
     cout << "\np is now " << p;
-    q = huge("100000000000000000129");
+//    q = huge("100000000000000000129");
+    q = huge("562949953421503");
     //bigprime(q);
     //tempq = bigprime(SHRT_MAX, USHRT_MAX);
     cout << "\nq is now " << q;
@@ -61,7 +63,8 @@ int main(void)
     cerr << "\nAnd Np = " << Np;
   //  cin.ignore(INT_MAX, '\n');
    // tempe = bigprime(SHRT_MAX, USHRT_MAX);
-    e = huge("100000000000000000039");
+//    e = huge("100000000000000000039");
+    e = huge("6374873");
      //bigprime(e);
     cerr << "\ne is : " << e;
    // cin.ignore(INT_MAX, '\n');
@@ -70,17 +73,33 @@ int main(void)
     cout << "\nN = " << N << "\ne = " << e << "\nd = " << d << '\n';
     
     cout << "\nEnter a word to ENCRYPT: ";
-    //getline(cin, M);
-    cin >> M;
-    toencrypt = readWord(M);
-    cout << "\ntoencrypt = " << toencrypt;
-    cout << "\nWorking on it.";
-    todecrypt = modexp(toencrypt, e, N);
+    getline(cin, M);
+    //cin >> M;
+    cryptovec = strtohuge(M);
+    //cout << "\ntoencrypt = " << toencrypt;
+	cerr << "cipher text:\n";
+	for (vector<huge>::size_type m=0; m < cryptovec.size(); m++)
+	{
+		cerr << cryptovec[m] << "\n";
+		decryptovec.push_back(modexp(cryptovec[m], e, N));
+	}
+	cryptovec.clear();
+	cerr << "encrypted cipher text:\n";
+	for (vector<huge>::size_type m=0; m < decryptovec.size(); m++)
+	{
+		cerr << decryptovec[m] << "\n";
+		cryptovec.push_back(modexp(decryptovec[m], d, N));
+	}
+	M = hugetostr(cryptovec);
+	
+    cout << "\nDecrypted Message: " << M << '\n';
+
+    /*todecrypt = modexp(toencrypt, e, N);
     cout << "\nEncrypted Message: " << todecrypt << '\n';
     toencrypt = modexp(todecrypt, d, N);
     M = printWord(toencrypt);
     
-    cout << "\nDecrypted Message: " << M << '\n';
+    cout << "\nDecrypted Message: " << M << '\n';*/
    
     return 0; 
     
@@ -90,14 +109,18 @@ int main(void)
 
 bool isPrime(huge & n)
 {
-    huge i=3; 
-    if (huge((n % 2)) == int(0))
+    huge i=5; 
+	//cerr << "n mod 2: " << n % 2 << "\n";
+    if ((n % 2) == 0 || (n % 3) == 0)
     {
         return false;
     }
-    while (n > i * i && n % i != 0)
-    {
-        i = (i + 2); 
+    while (n > i * i && 
+		   n % i != 0 && 
+		   n % (i + 2) != 0)
+    {	
+		cerr << "Trying i = " << i << "\n";
+        i = (i + 6); 
     }
     
     return i*i > n;
@@ -130,7 +153,8 @@ void bigprime(huge & p)
     //huge val = huge("10000000000");
     while(!isPrime(p))
     {
-        p = (p + static_cast<long>(1));
+		cerr << "p: " << p << "\n";
+        p++;
     }
     return;// val;
 }

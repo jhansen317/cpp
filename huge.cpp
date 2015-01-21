@@ -9,6 +9,8 @@
 
 using namespace std;
 
+
+
 void swap(short & a, short & b)
 {
     short c;
@@ -591,42 +593,88 @@ huge huge::lsb_push(const char & digit)
     return *this;
 }
 
-huge readWord(string word)
+vector<huge> strtohuge(string word)
 {
-    huge temp;
+	cerr << "Got into strtohuge...\n";
+	huge temp, holder, multiplier, base("256");
+    vector<huge> cont;
     char hundreds, tens, ones;
-    for(string::size_type i=0; i<word.size(); i++)
-    {
-        hundreds = word[i] / 100;
-        tens = (word[i] % 100) / 10;
-        ones = word[i] % 10;
-        temp.lsb_push(hundreds);
-        temp.lsb_push(tens);
-        temp.lsb_push(ones);
+	string::size_type i=0, k=0, numChunks = 0, remainder=0;
+	numChunks = word.size() / CHUNK_SIZE;
+	remainder = word.size() % CHUNK_SIZE; 
+	cerr << "Chunk Size is " << CHUNK_SIZE << "\n";
+	cerr << "Word is " << word << "\n";
+	cerr << "Word divided into " << numChunks 
+		 << " parts with final partial chunk of size " << remainder << "\n";
 
-    }
-    return temp;
+	temp = 0;
+	k = 0;
+	// process complete chunks
+	while (i < numChunks)
+	{
+		k = 0;
+		temp = 0;
+		cerr << "Splitting!\n";
+	    while (k<CHUNK_SIZE)
+   		{
+			cerr << "Processing char: " << word[(i*CHUNK_SIZE)+k] 
+				 << " (" << static_cast<int>(word[(i*CHUNK_SIZE)+k]) << ") " 
+				 << " into degree " << k << " term...\n";
+			multiplier = hugePow(base, k);
+			cerr << "multiplier = " << multiplier << "\n";
+			holder = multiplier * static_cast<int>(word[(i*CHUNK_SIZE)+k]);
+			cerr << "adding " << holder << " to " << temp << "\n";
+        	temp = temp + holder;
+			cerr << "now temp = " << temp << "\n";
+			k++;
+    	}
+		cont.push_back(temp);
+		i++;
+	}
+
+	k = 0;
+	temp = 0;
+	// process remaining partial chunk and pad with zeros
+	while (k < remainder)
+	{
+			cerr << "Processing char: " << word[(i*CHUNK_SIZE)+k] 
+				 << " (" << static_cast<int>(word[(i*CHUNK_SIZE)+k]) << ") " 
+				 << " into degree " << k << " term...\n";
+			multiplier = hugePow(base, k);
+			holder = multiplier * static_cast<int>(word[(i*CHUNK_SIZE)+k]);
+        	temp = temp + holder;
+			k++;		
+	}
+	if (remainder > 0)
+	{	
+		cont.push_back(temp);
+	}
+    return cont;
 }
-string printWord(const huge h)
+
+
+string hugetostr(const vector<huge> & h)
 {
-    string temp;
-    huge temph = h;
+    huge temp = 0, holder = 0, divisor, base("256");
+	string ret;
     char swp;
     char tempChar;
-    while(temph.get_size() != 0)
-    {
-        tempChar = temph.lsb_pop();
-        tempChar += temph.lsb_pop()*10;
-        tempChar += temph.lsb_pop()*100;
-        temp+=tempChar;
-    }
-    for(string::size_type i=0; i<=(temp.size()/2); i++)
-    {
-        swp = temp[i];
-        temp[i] = temp[temp.size()-1-i];
-        temp[temp.size()-1-i] = swp;
-    }
-    return temp;
+
+	for (vector<huge>::size_type i=0; i < h.size(); i++)
+	{
+		for (int k=0; k<CHUNK_SIZE; k++)
+		{
+			divisor = hugePow(base, k);
+			holder = (h[i]/divisor) % base;
+			tempChar = holder.byteToChar();
+			if (tempChar != 0)
+			{
+				ret += tempChar;
+			}
+		}
+	}
+
+    return ret;
 }
 
 
