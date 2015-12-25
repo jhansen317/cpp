@@ -1,0 +1,77 @@
+matrix-new.cpp***
+matrix-new.cpp: In instantiation of ‘class Traversor<char>’:
+matrix-new.cpp:313:53:   required from here
+matrix-new.cpp:61:7: warning: ‘class Traversor<char>’ has pointer
+data members [-Weffc++]
+ class Traversor
+       ^
+matrix-new.cpp:61:7: warning:   but does not override
+‘Traversor<char>(const Traversor<char>&)’ [-Weffc++]
+matrix-new.cpp:61:7: warning:   or ‘operator=(const
+Traversor<char>&)’ [-Weffc++]
+matrix-new.cpp: In function ‘int main()’:
+matrix-new.cpp:420:25: warning: conversion to ‘short int’ from
+‘std::vector<char, std::allocator<char> >::size_type {aka long
+unsigned int}’ may alter its value [-Wconversion]
+    cerr << boggleboard[i][p] << ' ';
+                         ^
+matrix-new.cpp: In instantiation of ‘bool
+Traversor<matrixT>::test(std::__cxx11::string) [with matrixT = char;
+std::__cxx11::string = std::__cxx11::basic_string<char>]’:
+matrix-new.cpp:319:26:   required from here
+matrix-new.cpp:180:14: warning: comparison between signed and unsigned
+integer expressions [-Wsign-compare]
+   if (rowInd == matrixp->numrows() || rowInd == -1 ||
+              ^
+matrix-new.cpp:181:11: warning: comparison between signed and unsigned
+integer expressions [-Wsign-compare]
+    colInd == matrixp->numcols() || colInd == -1)
+           ^
+matrix-new.cpp: In instantiation of ‘matrix<Object>::traversor
+matrix<Object>::lowerRight() const [with Object = char;
+matrix<Object>::traversor = Traversor<char>]’:
+matrix-new.cpp:376:37:   required from here
+matrix-new.cpp:245:50: warning: conversion to ‘short int’ from
+‘std::vector<char, std::allocator<char> >::size_type {aka long
+unsigned int}’ may alter its value [-Wconversion]
+   return traversor(this, numrows()-1, numcols()-1);
+                                                  ^
+matrix-new.cpp:245:50: warning: conversion to ‘short int’ from
+‘std::vector<char, std::allocator<char> >::size_type {aka long
+unsigned int}’ may alter its value [-Wconversion]
+matrix-new.cpp: In instantiation of ‘Traversor<matrixT>
+Traversor<matrixT>::operator++(int) [with matrixT = char]’:
+matrix-new.cpp:378:14:   required from here
+matrix-new.cpp:101:17: warning: comparison between signed and unsigned
+integer expressions [-Wsign-compare]
+      if (colInd != matrixp->numcols()-1)
+                 ^
+matrix-new.cpp:105:25: warning: comparison between signed and unsigned
+integer expressions [-Wsign-compare]
+         else if (rowInd != matrixp->numrows()-1)
+                         ^
+matrix-new.cpp: In instantiation of
+‘Traversor<matrixT>::Traversor(const matrix<matrixT>*) [with matrixT
+= char]’:
+matrix-new.cpp:237:24:   required from ‘matrix<Object>::traversor
+matrix<Object>::upperLeft() const [with Object = char;
+matrix<Object>::traversor = Traversor<char>]’
+matrix-new.cpp:373:52:   required from here
+matrix-new.cpp:71:2: warning: ‘Traversor<char>::visited’ should
+be initialized in the member initialization list [-Weffc++]
+  Traversor(const matrix<matrixT> * mP) :
+  matrixp(const_cast<matrix<char>* >(mP)), rowInd(0), colInd(0)
+  ^
+matrix-new.cpp: In instantiation of
+‘Traversor<matrixT>::Traversor(const matrix<matrixT>*, short int,
+short int) [with matrixT = char]’:
+matrix-new.cpp:245:50:   required from ‘matrix<Object>::traversor
+matrix<Object>::lowerRight() const [with Object = char;
+matrix<Object>::traversor = Traversor<char>]’
+matrix-new.cpp:376:37:   required from here
+matrix-new.cpp:75:2: warning: ‘Traversor<char>::visited’ should
+be initialized in the member initialization list [-Weffc++]
+  Traversor(const matrix<matrixT> * mP, short r, short c) :
+  ^
+
+

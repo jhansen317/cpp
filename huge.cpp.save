@@ -1,0 +1,713 @@
+#include <iostream>
+#include <cctype>
+#include <cmath>
+#include <string>
+#include <vector>
+#include <iomanip>
+#include <climits>
+#include "huge.h"
+
+using namespace std;
+
+void swap(short & a, short & b)
+{
+    short c;
+    c = a;
+    a = b;
+    b = c;
+    return;
+}    
+void swap(char & a, char & b)
+{
+    char c;
+    c = a;
+    a = b;
+    b = c;
+    return;
+}
+huge::huge(const string & other) : numdigits(0), sign(0)
+{
+    size_t zeros, beg, end;
+    string::size_type i=0;
+    if (other[0] == '-')
+    {
+        i = 1;
+        sign = -1;
+    }
+    else if (other[0] == '0')
+    {
+        sign = 0;
+        i = other.size();
+    }
+    else
+    {
+        sign = 1;
+    }
+    
+
+    while (i < other.size() && 
+            numdigits < MAX_DIGITS && isdigit(other[i]))
+    {
+        digits[numdigits] = static_cast<char>(other[i]-'0');
+        numdigits++;
+        i++;
+    }
+    for (zeros = numdigits; zeros < MAX_DIGITS; zeros++)
+    {
+        digits[zeros] = 0; 
+    }
+    for (beg=0, end=numdigits-1; beg < numdigits/2; beg++, end--)
+    {
+        swap(digits[beg], digits[end]);
+    }
+}
+huge::huge(const int & other) : numdigits(0), sign(0)
+{
+    size_t i;
+    int digit = 10;
+        
+    sign = (other < 0) ? -1 : 
+           (other > 0) ? 1 : 0;
+        
+    if (other < 10)
+    {
+        digits[0] = std::abs(other);
+        numdigits = 1;
+    }
+    else
+    {
+        while (other % digit <= std::abs(other))
+        {
+            digits[numdigits] = static_cast<char>((other % digit)/ (digit/BASE));
+            numdigits++;
+            digit *= BASE;
+        }
+    }
+    i = numdigits;
+    while (i < MAX_DIGITS)
+    {
+        digits[i] = 0;
+        i++;
+    }
+}
+huge & huge::operator=(const huge & other)
+{
+    size_t i;
+    for(size_t i=0; i<other.numdigits; i++)
+    {
+        digits[i] = other.digits[i];
+    }
+    sign = other.sign;
+    numdigits = other.numdigits;
+    i = numdigits;
+    while (i < MAX_DIGITS)
+    {
+        digits[i] = 0;
+        i++;
+    }
+    return *this;
+}
+huge & huge::operator=(const int & other)
+{
+    int digit = 10;
+    numdigits=0;
+    size_t i;
+    if (other < 0)
+    {
+        sign = -1;
+    }
+    else if (other > 0)
+    {
+        sign = 1;
+    }
+    else
+    {
+        digits[0] = 0;
+        sign = 0;
+        numdigits = 1;
+    }
+    if ((other < 10 && other > 0) || (other < 0 && other > -10))
+    {
+        digits[0] = std::abs(other);
+        //std::cerr << "\nstoring " << std::abs(other) << " in lsb";
+        numdigits = 1;
+    }
+    else
+    {
+        while (other % (digit/BASE) < std::abs(other))
+        {
+            //std::cerr << "\nother % (digit/BASE) = " << other % (digit/BASE);
+            //std::cerr << "\n(other % digit)/ (digit/BASE) = " << (other % digit)/ (digit/BASE);
+            digits[numdigits] = static_cast<char>((other % digit)/ (digit/BASE));
+            numdigits++;
+            digit *= BASE;
+        }
+    }
+    i = numdigits;
+    while (i < MAX_DIGITS)
+    {
+        digits[i] = 0;
+        i++;
+    }
+return *this;
+}
+
+bool huge::operator>(const huge & rhs) const
+{
+    bool returnval = false;
+    size_t i;
+    if (*this == rhs)
+    {
+        return false;
+    }
+    else if (sign == 1 && rhs.sign == 1)
+    {
+        if (numdigits == rhs.numdigits)
+        {
+            i = numdigits-1;
+            while (i != 0 && digits[i] == rhs.digits[i])
+            {
+                i--;
+            }
+            return (digits[i] > rhs.digits[i]);
+        }
+        else
+        {
+            return (numdigits > rhs.numdigits);
+        }
+    }
+    else if (sign == -1 && rhs.sign == -1)
+    {
+        if (numdigits == rhs.numdigits)
+        {
+            i = numdigits-1;
+            while (digits[i] == rhs.digits[i] && i != 0 )
+            {
+                i--;
+            }
+                return !(digits[i] > rhs.digits[i]);
+        }
+        else
+        {
+            return !(numdigits > rhs.numdigits);
+        }
+
+    }
+    else if (sign != rhs.sign)
+    {
+        return (sign > rhs.sign);
+    }
+    return returnval;
+}
+bool huge::operator==(const huge & rhs) const
+{     
+    size_t i = 0;
+    bool returnval = false;
+    if (numdigits == 1 && rhs.numdigits == 1 && digits[0] == rhs.digits[0])
+    {
+        returnval = true;
+    }
+    else if (numdigits == rhs.numdigits && sign == rhs.sign)
+    {
+        while (i < numdigits && digits[i] == rhs.digits[i])
+        {
+            i++;
+        }
+        if (i == numdigits)
+        {
+            returnval = true;
+        }
+        else
+        {
+            returnval = false;
+        }
+    }
+    else
+    {
+        returnval = false;
+    }
+    return returnval;
+}
+
+huge huge::operator+(const huge & rhs) const
+{
+    huge temp, storage; 
+    char carry = 0;
+    size_t i=0, longest;
+    if (numdigits >= rhs.numdigits)
+    {
+        longest = numdigits;
+    }
+    else
+    {                                                                                      
+        longest = rhs.numdigits;
+    }
+    if (sign == -1 && rhs.sign == 1)
+    {
+       // cerr << "\nCalling object is negative...";
+        storage = *this;
+        storage.sign = 1;
+       // cerr << "\nStorage now holds: " << storage;
+        temp = rhs - storage;
+    }
+    else if ((sign == 1 || sign == 0) && rhs.sign == 1)
+    {
+        //cerr << "\nCalling object is positive...";
+        while (i<longest)
+        {
+            //cerr << "\nAdding digits: " << i;
+            temp.digits[i] = static_cast<char>(digits[i] + rhs.digits[i] + carry);
+            if (temp.digits[i] > 9)
+            {
+                if (i == longest-1)
+                {
+                    longest++;
+                }
+                temp.digits[i] %= 10;
+                carry = 1;
+            }
+            else
+            {
+                carry = 0;
+            }
+            temp.numdigits++;
+            i++;
+        }
+        temp.sign = 1;
+    }
+    else if (sign == 1 && rhs.sign == -1)
+    {
+        //cerr << "\nright hand object is negative...";
+        storage = rhs;
+        storage.sign = 1;
+        temp = *this - storage;
+    }
+    i = temp.numdigits-1;
+    while(i > 1 && temp.digits[i] == 0)
+    {
+       temp.numdigits--;
+       i--;
+    }
+    if (temp.numdigits == 2 && temp.digits[1] == 0)
+    {
+        temp.numdigits--;
+    }
+    return temp; 
+}
+
+
+
+huge huge::operator-(const huge & rhs) const
+{
+    huge temp, storage, storage2; 
+    char carry = 0;
+    size_t i=0, longest;
+    //cerr << "\nat least got into - operator!";
+    //cin.ignore(INT_MAX, '\n');
+    
+    if (numdigits >= rhs.numdigits)
+    {
+        longest = numdigits;
+    }
+    else
+    {
+        longest = rhs.numdigits;
+    }
+    /*if (numdigits == 1 && rhs.numdigits == 1 && sign ==1 && rhs.sign == 1 )
+    {
+        if (digits[0] > rhs.digits[0])
+        {
+            temp.digits[0] = digits[0] - rhs.digits[0];
+            temp.sign = 1;
+        }
+        else if (rhs.digits[0] > digits[0])
+        {
+            temp.digits[0] = rhs.digits[0] - digits[0];
+            temp.sign = -1;
+        }
+        else
+        {
+            temp.digits[0] = 0;
+            temp.sign = 0;
+        }
+        temp.numdigits = 1;
+    }
+    else if (rhs.numdigits == 1 && sign ==1 && rhs.sign == 1)
+    {
+        if (digits[0] >= rhs.digits[0])
+        {
+            temp = *this;
+            temp.digits[0] = digits[0] - rhs.digits[0];
+            temp.sign = 1;
+        }
+        else 
+        {
+            temp = *this;
+            temp.digits[0] = 10 - (rhs.digits[0] - digits[0]);
+            if (temp.digits[1] > 0)
+            {
+                temp.digits[1]--;
+            }
+           
+        }
+        
+        
+    }
+    else*/ if (*this > rhs && (sign == 1 && rhs.sign ==1))
+    {
+        //cerr << "\nBoth objects are positive, left hand operand is larger";
+        while (i<longest)
+        {
+          //  cerr << "\nworking on " << static_cast<short>(digits[i]) << " and " << static_cast<short>(rhs.digits[i]);
+            if (digits[i]-carry < rhs.digits[i])
+            {
+                temp.digits[i] = static_cast<char>((digits[i]+10-carry) - rhs.digits[i]);
+                carry = 1; 
+            }
+            else
+            {
+                temp.digits[i] = static_cast<char>(digits[i] - rhs.digits[i] - carry);
+                carry = 0;
+            }
+            temp.numdigits++;
+            i++;
+        }
+        if (temp.numdigits == 1 && temp.digits[0] == 0)
+        {
+            temp.sign = 0;
+        }
+        else
+        {
+            temp.sign = 1;
+        }
+       // cerr << "\nTemp = " << temp;
+    }
+    else if (rhs > *this && (sign == 1 && rhs.sign ==1))
+    {
+        //cerr << "\nBoth objects are positive, right hand operand is larger";
+        temp = rhs - *this;
+        temp.sign = -1;
+    }
+    else if (sign == -1 && rhs.sign == -1)
+    {
+       // cerr << "\nBoth objects are negative";
+        storage = *this;
+        storage.sign = 1;
+        storage2 = rhs;
+        storage2.sign = 1;
+        temp = storage - storage2;            
+        temp.sign = -1;
+    }
+    else if (sign == -1 && rhs.sign == 1)
+    {
+
+        //cerr << "\nleft hand operand is negative";
+        storage = *this;
+        storage.sign = 1;
+        temp = storage + rhs;
+        temp.sign = -1;
+    }
+    else if (sign == 1 && rhs.sign == -1)
+    {
+        //cerr << "\nRight hand operand is negative";
+        storage = rhs;
+        storage.sign = 1;
+        temp = *this + storage;
+    }
+    else if (*this == rhs)
+    {
+        temp = static_cast<long>(0);
+        temp.sign = 0;
+    }
+    else if (rhs.sign == 0)
+    {
+        temp = *this;
+    }
+    else if (sign == 0)
+    {
+        temp = rhs;
+        temp.sign = -1;
+    }
+
+    //cerr << "\nBut did we get out....?";
+   i = temp.numdigits-1;
+   while(i > 1 && temp.digits[i] == 0)
+   {
+       temp.numdigits--;
+       i--;
+   }
+   //cerr << "\ntemp == " << temp;
+    if (temp.numdigits == 2 && temp.digits[1] == 0)
+    {
+        temp.numdigits--;
+    }
+   // cerr << "\ntemp = " << temp;
+   //cerr << "\nResult for now = " << temp;
+    return temp; 
+}
+
+
+huge huge::operator-(const int & rhs) const
+{
+    huge hrhs = rhs; 
+   
+    return *this - hrhs; 
+}
+
+istream & huge::read(istream & in) 
+{
+    size_t zeros, beg, end;
+    numdigits = 0;
+    if (in.peek() == '-')
+    {
+        in.ignore();
+        sign = -1;
+    }
+    else
+    {
+        sign = 1;
+    }
+    
+
+    while (isdigit(in.peek()) && numdigits < MAX_DIGITS)
+    {
+        digits[numdigits] = static_cast<char>(in.get()-'0');
+        numdigits++;
+    }
+    
+    for (zeros = numdigits; zeros < MAX_DIGITS; zeros++)
+    {
+        digits[zeros] = 0; 
+    }
+    for (beg=0, end=numdigits-1; beg < numdigits/2; beg++, end--)
+    {
+        swap(digits[beg], digits[end]);
+    }
+    in.ignore(INT_MAX, '\n');
+    return in;
+}
+
+ostream & huge::print(ostream & out) const
+{
+    size_t pos = 1;
+    if (sign == -1)
+    {
+        out << '-';
+    }
+    while (pos <= numdigits)
+    {
+        out << static_cast<char>(digits[numdigits-pos]+'0');
+        pos++;
+    }
+    return out;
+}
+
+
+istream & operator>>(istream & in, huge & num)
+{  
+    return num.read(in);
+}
+ostream & operator<<(ostream & out, const huge & num)
+{
+    return num.print(out);
+}
+huge huge::operator*(const int & rhs) const
+{
+    huge hrhs;
+    hrhs = rhs;
+    
+    return *this * hrhs;
+}
+
+huge huge::operator/(const huge & divisor) const
+{
+    huge tempdividend, tempremainder, 
+         tempquotient, quotient;
+    tempremainder = static_cast<long>(0);
+    for (size_t i = numdigits; i>0; i--)
+    {
+        tempdividend = tempremainder.lsb_push(digits[i-1]);
+        tempquotient = static_cast<long>(10);
+        while((divisor * tempquotient) > tempdividend)
+        {
+            //cerr << "\n" << (divisor*tempquotient) << " is greater than " << tempdividend;
+            tempquotient--;
+        }
+        quotient.lsb_push(tempquotient.digits[0]);
+        //cerr << "\nAppending: " << tempquotient.digits[0];
+        tempremainder = tempdividend - (tempquotient*divisor);
+    }
+    quotient.sign = (sign == divisor.sign) ? 1 : -1;
+    return quotient;
+}
+char huge::lsb_pop(void)
+{
+    char returnChar = digits[0];
+    size_t i;
+    for (i = 1; i<numdigits; i++)
+    {
+        digits[i-1] = digits[i]; // shift everything toward LSB
+    }
+    if (numdigits > 0)
+        numdigits--;
+    return returnChar;
+}
+
+huge huge::lsb_push(const char & digit)
+{
+    if (numdigits == 0)
+    {
+        if (digit == 0)
+        {
+            numdigits++;
+        }
+        else
+        {
+            numdigits++;
+            sign = 1;
+            digits[0] = digit;
+        }
+            
+    }
+    else if (numdigits == 1 && digits[0] == 0 && digit == 0)
+    {
+        return *this;
+    }
+    else if (numdigits == 1 && digits[0] == 0 && digit > 0)
+    {
+        digits[0] = digit;
+        sign = 1;
+    }        
+    else
+    {
+        for (size_t i = numdigits; i > 0; i--)
+        {
+            digits[i] = digits[i-1];
+        }
+        digits[0] = digit;
+        sign = 1;
+        numdigits++;
+    }
+    return *this;
+}
+
+vector<huge> readWord(string word)
+{
+    huge temp;
+    char hundreds, tens, ones;
+	string::size_type i=0, numChunks=0, remainderBytes=0;
+
+	// split string into chunks of 5 bytes long
+	numChunks = word.size() / 5;
+
+	// last chunk may have fewer than 5 bytes...
+	remainderBytes = word.size() % 5;
+
+	while (i < numChunks)
+	{
+	    for(string::size_type k=0; k<5; k++)
+   		{
+        	temp += word[i+k] * pow(256.0, static_cast<double>(k+i));
+        	/*tens = (word[i] % 100) / 10;
+        	ones = word[i] % 10;
+        	temp.lsb_push(hundreds);
+        	temp.lsb_push(tens);
+        	temp.lsb_push(ones);*/
+
+    	}
+		i++;
+	}
+    return temp;
+}
+string printWord(const huge h)
+{
+    string temp;
+    huge temph = h;
+    char swp;
+    char tempChar;
+    while(temph.get_size() != 0)
+    {
+        tempChar = temph.lsb_pop();
+        tempChar += temph.lsb_pop()*10;
+        tempChar += temph.lsb_pop()*100;
+        temp+=tempChar;
+    }
+    for(string::size_type i=0; i<=(temp.size()/2); i++)
+    {
+        swp = temp[i];
+        temp[i] = temp[temp.size()-1-i];
+        temp[temp.size()-1-i] = swp;
+    }
+    return temp;
+}
+
+
+huge huge::operator*(const huge & rhs) const
+{
+    huge returnval;
+    char temp;
+    char quotient;
+    size_t k = numdigits;
+    size_t m = rhs.numdigits;
+    size_t i, j;
+    for (i=0; i < k; i++)
+    {
+       // cerr << "\nWorking on lhs digit # " << i;
+        for (j=0; j < m; j++)
+        {
+            if (j == 0)
+            {
+                quotient = 0;
+            }
+            temp = static_cast<char>(returnval.digits[i+j] 
+                 + quotient + (digits[i]*rhs.digits[j]));    
+           // cerr << "\nStoring " << static_cast<short>(temp % 10) << " in digit " << i+j;      
+            returnval.digits[i+j] = temp % 10;
+            quotient = temp/10;           
+        }
+        //cerr << "\nStoring " << static_cast<short>(quotient) << " in digit " << i+m;
+        returnval.digits[i+m] = quotient;   
+        
+    }
+    returnval.numdigits = k+m;
+    
+    if (returnval.digits[returnval.numdigits-1] == 0)
+    {
+        returnval.numdigits--;
+    }
+    if ((sign == -1 && rhs.sign == 1) ||(sign == 1 && rhs.sign == -1))
+    {
+        returnval.sign = -1;
+    }
+    else if (sign == 0 || rhs.sign == 0)
+    {
+        returnval.sign = 0;
+    }
+    else
+    {
+        returnval.sign = 1;
+    }
+    //cerr << "\nThe number of digits in this number is: " << returnval.numdigits;
+    return returnval;
+}
+
+huge huge::operator%(const huge & rhs) const
+{   
+    huge holder;
+    if (rhs == 1 || (rhs == 2 && digits[0] % 2 == 0))
+    {
+        return huge(0);
+    }
+    else if (*this > rhs)
+    {
+        return *this - ((*this / rhs) * rhs);
+    }
+    else if (*this == rhs)
+    {
+        return huge(0);
+    }
+    else
+    {
+        return *this;
+    }
+}

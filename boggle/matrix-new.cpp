@@ -1,11 +1,17 @@
-#include<vector>
-#include<string>
-#include<fstream>
-#include<iostream>
-#include<cctype>
-#include<climits>
+#include <vector>
+#include <string>
+#include <fstream>
+#include <iostream>
+#include <cctype>
+#include <climits>
+#include <ctime>
+#include "PrefixTree.h"
+#include "RandLetter.h"
+#include "../sortlib.h"
 
 using namespace std;
+
+// Tidy location class to hold coordinates on the board. 
 
 class Location
 {
@@ -31,11 +37,11 @@ public:
 };
 
 
-
+// linear search 
 template <class Comparable>
-short linsearch(vector<Comparable> & v, Comparable find)
+typename vector<Comparable>::size_type linsearch(vector<Comparable> & v, Comparable find)
 {
-    short i=0;
+    typename vector<Comparable>::size_type i=0;
     while(i != v.size() && v[i] != find)
     {
         i++;
@@ -47,6 +53,13 @@ short linsearch(vector<Comparable> & v, Comparable find)
 template <class Object>
 class matrix;
 
+
+/* Traversors function like iterators, but instead of manipulating them 
+ with arithmetic, you feed them directions as strings N, S, E, W, etc. They
+ also remember where they have been, and for the purposes of this application
+ are not allowed to "traverse" anywhere they've already gone, as per the 
+ rules of boggle.  */
+ 
 template <typename matrixT>
 class Traversor
 {
@@ -58,17 +71,20 @@ class Traversor
 
 public:
 	Traversor(void) : matrixp(NULL), rowInd(-1), colInd(-1) { }
-	Traversor(matrix<matrixT> * mP) : matrixp(mP), rowInd(0), colInd(0) 
+	Traversor(const matrix<matrixT> * mP) : matrixp(const_cast<matrix<char>* >(mP)), rowInd(0), colInd(0) 
 	{
 		visited.push_back(Location(rowInd, colInd));
 	}
-	Traversor(matrix<matrixT> * mP, short r, short c) : 
-	                                  matrixp(mP), rowInd(r), colInd(c) 
+	Traversor(const matrix<matrixT> * mP, short r, short c) : 
+	                                  matrixp(const_cast<matrix<char>* >(mP)), rowInd(r), colInd(c) 
 	{ 
 		visited.push_back(Location(rowInd, colInd));
 	}
+	
+	// dereference operator
 	matrixT operator*(){ return matrixp->array[rowInd][colInd]; } 
 	
+	// comparison operators
 	bool operator==(const Traversor other) const
 	{
 		return (rowInd == other.rowInd && colInd == other.colInd);
@@ -78,6 +94,11 @@ public:
 		return !(rowInd == other.rowInd && colInd == other.colInd);
 	}
 	
+	
+	/* operator++ works a little oddly due to the two dimensional nature of
+	 the boggle board ++ing a traversor object moves it from left to right 
+	 down each row from top to bottom, made for easy looping through all 
+	 items in the matrix. */
 	Traversor operator++(int)
     {
     	if (colInd != matrixp->numcols()-1)
@@ -95,6 +116,7 @@ public:
     }
 	
 	
+    // moves the iterator in the specified direction 
 	void operator+=(string dir)
 	{
 		if (dir == "N")
@@ -136,6 +158,8 @@ public:
 		visited.push_back(Location(rowInd, colInd));
 		return;
 	}    
+	
+	// backs up to the previous position. 
 	matrixT reverse(void)
     {
         if (visited.size() > 1)
@@ -146,11 +170,16 @@ public:
         colInd = visited.back().get_col();
         return matrixp->array[rowInd][colInd];
     }
+    
+    /* tests if we can move a given direction - first tests if we move off
+       the board, and then if we are moving to a spot we've been to before. */
+   
 	bool test(string dir)
-	{
-		
+	{		
 		bool returnval = true;		
+		
 		(*this)+=dir;
+		
 		if (rowInd == matrixp->numrows() || rowInd == -1 || 
 			colInd == matrixp->numcols() || colInd == -1)
 		{
@@ -206,19 +235,30 @@ public:
 		array.push_back(newRow);
 	}
 	
-	traversor upperLeft(void)
+	traversor upperLeft(void) const
 	{
 		return traversor(this);
 	}
-	traversor upperRight(void)
+	traversor upperRight(void) const 
 	{
 		return traversor(this, 0, numcols()-1);
 	}
-	traversor lowerRight(void)
+	traversor lowerRight(void) const
 	{
 		return traversor(this, numrows()-1, numcols()-1);
 	}
 };
+
+string toLower(string a)
+{
+	string returnstring;
+	for (string::size_type i=0; i<a.size(); i++)
+	{
+		returnstring += static_cast<char>(tolower(a[i]));
+	}
+	return returnstring;
+}
+
 template <class Comparable>
 long fullSearch(const vector<Comparable> & a, const Comparable & x)
 {
@@ -245,15 +285,6 @@ long fullSearch(const vector<Comparable> & a, const Comparable & x)
 	return -1; 
 }
 
-string toLower(string a)
-{
-	string returnstring;
-	for (string::size_type i=0; i<a.size(); i++)
-	{
-		returnstring += tolower(a[i]);
-	}
-	return returnstring;
-}
 
 long subSearch(vector<string> svec, string x)
 {
@@ -280,11 +311,7 @@ long subSearch(vector<string> svec, string x)
 }
 
 
-
-
-
-
-void findwords(string & tempstring, matrix<char> grid, vector<string> & foundvec, 
+void findwords(string & tempstring, const matrix<char> & grid, vector<string> & foundvec, 
 	                            matrix<char>::traversor pos, 
 	                            vector<string> & dicvec)
 {
@@ -315,14 +342,62 @@ void findwords(string & tempstring, matrix<char> grid, vector<string> & foundvec
    	}
 	return; 
 }
-vector<string> findwords(matrix<char> grid)
+
+void findwords_trie(string & tempstring, const matrix<char> & grid, vector<string> & foundvec, 
+	                            matrix<char>::traversor pos, 
+	                            PrefixTree* triedic)
+{
+	string dirs[] = {"E", "S","NW","N", "W", "NE",  "SE", "SW"};
+	
+    for (size_t i=0; i < 8; i++)
+    {
+    	if (pos.test(dirs[i])) 
+    	{
+    		pos+=dirs[i];
+    		tempstring += (*pos);
+    		
+    		if (triedic->search(tempstring)) // search only for complete words
+    		{
+    			if (linsearch(foundvec, tempstring) == foundvec.size())
+    			{
+    				foundvec.push_back(tempstring); 
+    			}   			
+    			findwords_trie(tempstring, grid, foundvec, pos, triedic);
+    		}
+    	    else if (triedic->search(tempstring, false)) // if we didn't find a complete word, try prefix
+    		{
+    			findwords_trie(tempstring, grid, foundvec, pos, triedic);	 
+    		}
+    		pos.reverse(); 
+    		tempstring = tempstring.substr(0, tempstring.size()-1);
+    	}
+   	}
+	return; 
+}
+vector<string> findwords_trie(const matrix<char> & grid, PrefixTree* triedic)
+{
+    vector<string> found;
+    matrix<char>::traversor start = grid.upperLeft();
+    string s;
+    s = *start;
+    findwords_trie(s, grid, found, start, triedic);
+    while (start != grid.lowerRight())
+    {
+        start++;
+        s = *start;
+        findwords_trie(s, grid, found, start, triedic);
+    }
+
+     return found;   
+}
+vector<string> findwords(const matrix<char> & grid)
 {
 	vector<string> found;
 	vector<string> dict; 
 	string s; 
 	string temp, filename;
 	ifstream infile;
-	infile.open("word.list"); 	
+	infile.open("large.txt"); 	
    	
 	//cerr << "\nGot into first findwords"; 
 	
@@ -360,69 +435,100 @@ vector<string> findwords(matrix<char> grid)
 }
 
 
-int main(void)
+int main(int argc, char* argv[])
 {
+	char c; 
+    srand(time(NULL));
+    string holder;
 	vector<char> row;
 	matrix<char> boggleboard(0,0);
-
+    PrefixTree* trie = new PrefixTree();
+    ifstream infile;
+    infile.open("large.txt");
+    trie->read_file(infile);
+    infile.close();
+    cout << "read in dict file...that's a start \n";
 	vector<string> foundwords; 
+	size_t BOARD_SIZE;
+    if (argc > 1)
+    {
+        BOARD_SIZE = atoi(argv[1]);
+    }   
+    else
+    {
+        BOARD_SIZE = 4;
+    }
 	
-	string findme; 
-
-	row.push_back('i');
-	row.push_back('w');
-	row.push_back('l');
-	row.push_back('i');
-	boggleboard.push_back(row);
-	row.clear();
-	row.push_back('w');
-	row.push_back('e');
-	row.push_back('l');
-	row.push_back('b');
-	boggleboard.push_back(row);
-	row.clear();
-	row.push_back('a');
-	row.push_back('e');
-	row.push_back('s');
-	row.push_back('a');
-	boggleboard.push_back(row);
-	row.clear();
-	row.push_back('p');
-	row.push_back('i');
-	row.push_back('r');
-	row.push_back('h');
-	boggleboard.push_back(row);
-
+	/*cout << "\nPlease enter " << BOARD_SIZE * BOARD_SIZE << " characters: ";
 	
+	while (cin.peek() != '\n')
+	{
+		cin >> c;
+		holder.push_back(c);
+	}*/
+
+    cout << "Generating random boggle board..." << endl;
+    holder = RandString(BOARD_SIZE*BOARD_SIZE);
+    cout << "String is " << holder << endl;
     
-	for (short i=0; i< boggleboard.numrows();i++)
+
+	for (size_t i=0; i<BOARD_SIZE; i++) // loop to populate each row of the board 
+	{
+		for (size_t p=0; p<BOARD_SIZE; p++)
+		{   
+			row.push_back(holder[(i*BOARD_SIZE)+p]);
+		}
+		boggleboard.push_back(row);
+		row.clear();
+	}
+	cout << "\nYour Boggle Board:"; 
+    
+	for (vector<char>::size_type i=0; i< boggleboard.numrows();i++)
 	{
 		cerr << '\n';
-		for (short p=0; p < boggleboard.numcols(); p++)
+		for (vector<char>::size_type p=0; p < boggleboard.numcols(); p++)
 		{
 			cerr << boggleboard[i][p] << ' '; 
 		}
 	}
 	
+    cout << "\nStarting timer...";
+
+    vector<string> newfound;
+    clock_t triebegin = clock();
+    newfound = findwords_trie(boggleboard, trie);
+    clock_t trieend = clock();
+    double elapsed_secs_trie = double(trieend - triebegin) / CLOCKS_PER_SEC;
+
+    quicksort(newfound);
 	
+    cout << "\nPrefixTree version found " << newfound.size() << " words in " << elapsed_secs_trie << " seconds: ";
+	for (vector<string>::size_type i = 0; i < newfound.size(); i++)
+	{
+		cout << '\n' << newfound[i]; 
+	}
+
+    cout << "\nStarting binary search version...please wait...\n";
+
+    clock_t begin = clock();    	
 	foundwords = findwords(boggleboard);
-	
-	cout << "\nFound " << foundwords.size() << " words: "; 
-	
+    clock_t end = clock();
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+    quicksort(foundwords);
+	cout << "\nBinary search version found " << foundwords.size() << " words in " << elapsed_secs << " seconds: ";
 	for (vector<string>::size_type i = 0; i < foundwords.size(); i++)
 	{
 		cout << '\n' << foundwords[i]; 
 	}
 	
-	cout << '\n'; 
+	cout << '\n';
 	
+    double elapsed_ratio = elapsed_secs/elapsed_secs_trie;
+ 
+    cout << "Ratio of binary search speed to tree search speed: " << elapsed_ratio << ":1" << endl;   
+    cout << "\n\nString was " << holder << endl;
 	return 0; 
 }
 
-
-//a q b d 
-//c o n t 
-//h r a i 
-//t n e n 
 
 

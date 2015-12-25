@@ -1,0 +1,26 @@
+trie-drive.cpp***
+trie.cpp...
+In file included from trie-drive.cpp:1:0:
+trie.h:24:7: warning: ‘class Trie’ has pointer data members
+[-Weffc++]
+ class Trie
+       ^
+trie.h:24:7: warning:   but does not override ‘Trie(const Trie&)’
+[-Weffc++]
+trie.h:24:7: warning:   or ‘operator=(const Trie&)’ [-Weffc++]
+In file included from trie.cpp:1:0:
+trie.h:24:7: warning: ‘class Trie’ has pointer data members
+[-Weffc++]
+ class Trie
+       ^
+trie.h:24:7: warning:   but does not override ‘Trie(const Trie&)’
+[-Weffc++]
+trie.h:24:7: warning:   or ‘operator=(const Trie&)’ [-Weffc++]
+trie.cpp: In member function ‘bool Trie::search(std::__cxx11::string,
+bool)’:
+trie.cpp:76:1: warning: control reaches end of non-void function
+[-Wreturn-type]
+ }
+ ^
+
+

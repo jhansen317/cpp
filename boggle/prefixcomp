@@ -1,0 +1,28 @@
+PrefixTree.cpp...
+PrefixTreeDrive.cpp***
+In file included from PrefixTree.cpp:1:0:
+PrefixTree.h:33:7: warning: ‘class PrefixTree’ has pointer data
+members [-Weffc++]
+ class PrefixTree
+       ^
+PrefixTree.h:33:7: warning:   but does not override ‘PrefixTree(const
+PrefixTree&)’ [-Weffc++]
+PrefixTree.h:33:7: warning:   or ‘operator=(const PrefixTree&)’
+[-Weffc++]
+PrefixTree.cpp: In member function ‘bool PrefixTree::search(const
+string&, bool)’:
+PrefixTree.cpp:85:1: warning: control reaches end of non-void function
+[-Wreturn-type]
+ }
+ ^
+In file included from PrefixTreeDrive.cpp:1:0:
+PrefixTree.h:33:7: warning: ‘class PrefixTree’ has pointer data
+members [-Weffc++]
+ class PrefixTree
+       ^
+PrefixTree.h:33:7: warning:   but does not override ‘PrefixTree(const
+PrefixTree&)’ [-Weffc++]
+PrefixTree.h:33:7: warning:   or ‘operator=(const PrefixTree&)’
+[-Weffc++]
+
+
