@@ -1,0 +1,47 @@
+Board.cpp...
+BoardDriver.cpp***
+In file included from Board.cpp:3:0:
+Board.h: In member function ‘size_t SquareNode::count_links()’:
+Board.h:57:46: warning: no return statement in function returning
+non-void [-Wreturn-type]
+     size_t count_links(void) { links.size(); }
+                                              ^
+Board.cpp: In member function ‘SquareNode*
+SquareNode::find_from_from_by_dir(direction)’:
+Board.cpp:62:1: warning: control reaches end of non-void function
+[-Wreturn-type]
+ }
+ ^
+In file included from BoardDriver.cpp:2:0:
+Board.h: In member function ‘size_t SquareNode::count_links()’:
+Board.h:57:46: warning: no return statement in function returning
+non-void [-Wreturn-type]
+     size_t count_links(void) { links.size(); }
+                                              ^
+BoardDriver.cpp: In function ‘int main()’:
+BoardDriver.cpp:11:11: warning: unused variable ‘in1’
+[-Wunused-variable]
+     short in1, in2, in3, out1, out2, out3;
+           ^
+BoardDriver.cpp:11:16: warning: unused variable ‘in2’
+[-Wunused-variable]
+     short in1, in2, in3, out1, out2, out3;
+                ^
+BoardDriver.cpp:11:21: warning: unused variable ‘in3’
+[-Wunused-variable]
+     short in1, in2, in3, out1, out2, out3;
+                     ^
+BoardDriver.cpp:11:26: warning: unused variable ‘out1’
+[-Wunused-variable]
+     short in1, in2, in3, out1, out2, out3;
+                          ^
+BoardDriver.cpp:11:32: warning: unused variable ‘out2’
+[-Wunused-variable]
+     short in1, in2, in3, out1, out2, out3;
+                                ^
+BoardDriver.cpp:11:38: warning: unused variable ‘out3’
+[-Wunused-variable]
+     short in1, in2, in3, out1, out2, out3;
+                                      ^
+
+

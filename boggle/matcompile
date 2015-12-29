@@ -1,6 +1,6 @@
 PrefixTree.cpp...
 RandLetter.cpp...
-matrix-new.cpp***
+bogglesolver.cpp***
 In file included from PrefixTree.cpp:1:0:
 PrefixTree.h:33:7: warning: ‘class PrefixTree’ has pointer data
 members [-Weffc++]
@@ -16,7 +16,7 @@ PrefixTree.cpp:85:1: warning: control reaches end of non-void function
 [-Wreturn-type]
  }
  ^
-In file included from matrix-new.cpp:8:0:
+In file included from bogglesolver.cpp:8:0:
 PrefixTree.h:33:7: warning: ‘class PrefixTree’ has pointer data
 members [-Weffc++]
  class PrefixTree
@@ -25,85 +25,84 @@ PrefixTree.h:33:7: warning:   but does not override ‘PrefixTree(const
 PrefixTree&)’ [-Weffc++]
 PrefixTree.h:33:7: warning:   or ‘operator=(const PrefixTree&)’
 [-Weffc++]
-matrix-new.cpp: In instantiation of ‘class Traversor<char>’:
-matrix-new.cpp:316:53:   required from here
-matrix-new.cpp:64:7: warning: ‘class Traversor<char>’ has pointer
-data members [-Weffc++]
+bogglesolver.cpp: In instantiation of ‘class Traversor<char>’:
+bogglesolver.cpp:320:53:   required from here
+bogglesolver.cpp:64:7: warning: ‘class Traversor<char>’ has
+pointer data members [-Weffc++]
  class Traversor
        ^
-matrix-new.cpp:64:7: warning:   but does not override
+bogglesolver.cpp:64:7: warning:   but does not override
 ‘Traversor<char>(const Traversor<char>&)’ [-Weffc++]
-matrix-new.cpp:64:7: warning:   or ‘operator=(const
+bogglesolver.cpp:64:7: warning:   or ‘operator=(const
 Traversor<char>&)’ [-Weffc++]
-matrix-new.cpp: In function ‘int main(int, char**)’:
-matrix-new.cpp:441:21: warning: conversion to ‘unsigned int’ from
-‘time_t {aka long int}’ may alter its value [-Wconversion]
+bogglesolver.cpp: In function ‘int main(int, char**)’:
+bogglesolver.cpp:445:21: warning: conversion to ‘unsigned int’
+from ‘time_t {aka long int}’ may alter its value [-Wconversion]
      srand(time(NULL));
                      ^
-matrix-new.cpp:491:25: warning: conversion to ‘short int’ from
+bogglesolver.cpp:485:25: warning: conversion to ‘short int’ from
 ‘std::vector<char, std::allocator<char> >::size_type {aka long
 unsigned int}’ may alter its value [-Wconversion]
     cerr << boggleboard[i][p] << ' ';
                          ^
-matrix-new.cpp:440:7: warning: unused variable ‘c’
+bogglesolver.cpp:444:7: warning: unused variable ‘c’
 [-Wunused-variable]
   char c;
        ^
-matrix-new.cpp: In instantiation of ‘bool
+bogglesolver.cpp: In instantiation of ‘bool
 Traversor<matrixT>::test(std::__cxx11::string) [with matrixT = char;
 std::__cxx11::string = std::__cxx11::basic_string<char>]’:
-matrix-new.cpp:322:26:   required from here
-matrix-new.cpp:183:14: warning: comparison between signed and unsigned
-integer expressions [-Wsign-compare]
+bogglesolver.cpp:326:26:   required from here
+bogglesolver.cpp:187:14: warning: comparison between signed and
+unsigned integer expressions [-Wsign-compare]
    if (rowInd == matrixp->numrows() || rowInd == -1 ||
               ^
-matrix-new.cpp:184:11: warning: comparison between signed and unsigned
-integer expressions [-Wsign-compare]
+bogglesolver.cpp:188:11: warning: comparison between signed and
+unsigned integer expressions [-Wsign-compare]
     colInd == matrixp->numcols() || colInd == -1)
            ^
-matrix-new.cpp: In instantiation of ‘matrix<Object>::traversor
+bogglesolver.cpp: In instantiation of ‘matrix<Object>::traversor
 matrix<Object>::lowerRight() const [with Object = char;
 matrix<Object>::traversor = Traversor<char>]’:
-matrix-new.cpp:384:37:   required from here
-matrix-new.cpp:248:50: warning: conversion to ‘short int’ from
+bogglesolver.cpp:388:37:   required from here
+bogglesolver.cpp:252:50: warning: conversion to ‘short int’ from
 ‘std::vector<char, std::allocator<char> >::size_type {aka long
 unsigned int}’ may alter its value [-Wconversion]
    return traversor(this, numrows()-1, numcols()-1);
                                                   ^
-matrix-new.cpp:248:50: warning: conversion to ‘short int’ from
+bogglesolver.cpp:252:50: warning: conversion to ‘short int’ from
 ‘std::vector<char, std::allocator<char> >::size_type {aka long
 unsigned int}’ may alter its value [-Wconversion]
-matrix-new.cpp: In instantiation of ‘Traversor<matrixT>
+bogglesolver.cpp: In instantiation of ‘Traversor<matrixT>
 Traversor<matrixT>::operator++(int) [with matrixT = char]’:
-matrix-new.cpp:386:14:   required from here
-matrix-new.cpp:104:17: warning: comparison between signed and unsigned
-integer expressions [-Wsign-compare]
+bogglesolver.cpp:390:14:   required from here
+bogglesolver.cpp:108:17: warning: comparison between signed and
+unsigned integer expressions [-Wsign-compare]
       if (colInd != matrixp->numcols()-1)
                  ^
-matrix-new.cpp:108:25: warning: comparison between signed and unsigned
-integer expressions [-Wsign-compare]
+bogglesolver.cpp:112:25: warning: comparison between signed and
+unsigned integer expressions [-Wsign-compare]
          else if (rowInd != matrixp->numrows()-1)
                          ^
-matrix-new.cpp: In instantiation of
+bogglesolver.cpp: In instantiation of
 ‘Traversor<matrixT>::Traversor(const matrix<matrixT>*) [with matrixT
 = char]’:
-matrix-new.cpp:240:24:   required from ‘matrix<Object>::traversor
+bogglesolver.cpp:244:24:   required from ‘matrix<Object>::traversor
 matrix<Object>::upperLeft() const [with Object = char;
 matrix<Object>::traversor = Traversor<char>]’
-matrix-new.cpp:380:52:   required from here
-matrix-new.cpp:74:2: warning: ‘Traversor<char>::visited’ should
+bogglesolver.cpp:384:52:   required from here
+bogglesolver.cpp:75:2: warning: ‘Traversor<char>::visited’ should
 be initialized in the member initialization list [-Weffc++]
   Traversor(const matrix<matrixT> * mP) :
-  matrixp(const_cast<matrix<char>* >(mP)), rowInd(0), colInd(0)
   ^
-matrix-new.cpp: In instantiation of
+bogglesolver.cpp: In instantiation of
 ‘Traversor<matrixT>::Traversor(const matrix<matrixT>*, short int,
 short int) [with matrixT = char]’:
-matrix-new.cpp:248:50:   required from ‘matrix<Object>::traversor
+bogglesolver.cpp:252:50:   required from ‘matrix<Object>::traversor
 matrix<Object>::lowerRight() const [with Object = char;
 matrix<Object>::traversor = Traversor<char>]’
-matrix-new.cpp:384:37:   required from here
-matrix-new.cpp:78:2: warning: ‘Traversor<char>::visited’ should
+bogglesolver.cpp:388:37:   required from here
+bogglesolver.cpp:81:2: warning: ‘Traversor<char>::visited’ should
 be initialized in the member initialization list [-Weffc++]
   Traversor(const matrix<matrixT> * mP, short r, short c) :
   ^
