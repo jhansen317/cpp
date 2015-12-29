@@ -9,13 +9,6 @@
 
 using namespace std;
 
-/*huge N = huge("26797");
-huge e = huge("13379");
-huge d = huge("11099");
-huge N = huge("289589987027694038837");
-huge e = huge("123456791");
-huge d = huge("266023389946776676079")*/
-
 inline unsigned long rand_range(unsigned long min, unsigned long max)
 {
        return rand()% (max-min+1)  + min;
@@ -40,20 +33,11 @@ int main(void)
     vector<string> stringvec, decodevec;
     huge toencrypt, todecrypt, bigP;
     huge p, q, N, Np, e, d, R, dM, one; 
-    //long tempp, tempq, tempe;
-    //one = static_cast<const long>(1); 
-    //p = huge("6374856");
     p = huge("562949953421381");
-    //bigprime(p);
     cout << "\np is now " << p;
-//    q = huge("100000000000000000129");
     q = huge("562949953421503");
-    //bigprime(q);
-    //tempq = bigprime(SHRT_MAX, USHRT_MAX);
     cout << "\nq is now " << q;
-   // q = tempq;   
     N = p*q; 
-   // N = huge("5000000064000000203");
     cerr << "\np * q = N = " << N;
     p--;
     q--;
@@ -61,22 +45,14 @@ int main(void)
     cerr << "\nq-1 = " << q;
     Np = p*q;
     cerr << "\nAnd Np = " << Np;
-  //  cin.ignore(INT_MAX, '\n');
-   // tempe = bigprime(SHRT_MAX, USHRT_MAX);
-//    e = huge("100000000000000000039");
     e = huge("6374873");
-     //bigprime(e);
     cerr << "\ne is : " << e;
-   // cin.ignore(INT_MAX, '\n');
     d = minverse(e, Np);
-    //d = huge("199679738338703423");*/
     cout << "\nN = " << N << "\ne = " << e << "\nd = " << d << '\n';
     
     cout << "\nEnter a word to ENCRYPT: ";
     getline(cin, M);
-    //cin >> M;
     cryptovec = strtohuge(M);
-    //cout << "\ntoencrypt = " << toencrypt;
 	cerr << "cipher text:\n";
 	for (vector<huge>::size_type m=0; m < cryptovec.size(); m++)
 	{
@@ -93,13 +69,6 @@ int main(void)
 	M = hugetostr(cryptovec);
 	
     cout << "\nDecrypted Message: " << M << '\n';
-
-    /*todecrypt = modexp(toencrypt, e, N);
-    cout << "\nEncrypted Message: " << todecrypt << '\n';
-    toencrypt = modexp(todecrypt, d, N);
-    M = printWord(toencrypt);
-    
-    cout << "\nDecrypted Message: " << M << '\n';*/
    
     return 0; 
     

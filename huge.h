@@ -123,7 +123,6 @@ public:
 
 inline huge hugePow(const huge & base, const int & exp) 
 {
-	std::cerr << "Got into hugePow...\n";
 	huge ret=1;
 	for (int i=0; i<exp; i++)
 	{
@@ -137,7 +136,6 @@ inline huge hugePow(const huge & base, const int & exp)
 std::istream & operator>>(std::istream & in, huge & num);
 std::ostream & operator<<(std::ostream & out, const huge & num);
 std::vector<huge> strtohuge(std::string word);
-//std::string printWord(const huge h);
 std::string hugetostr(const std::vector<huge> & h);
 
 #endif        //  #ifndef HUGE_H

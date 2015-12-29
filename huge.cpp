@@ -131,15 +131,12 @@ huge & huge::operator=(const int & other)
     if ((other < 10 && other > 0) || (other < 0 && other > -10))
     {
         digits[0] = std::abs(other);
-        //std::cerr << "\nstoring " << std::abs(other) << " in lsb";
         numdigits = 1;
     }
     else
     {
         while (other % (digit/BASE) < std::abs(other))
         {
-            //std::cerr << "\nother % (digit/BASE) = " << other % (digit/BASE);
-            //std::cerr << "\n(other % digit)/ (digit/BASE) = " << (other % digit)/ (digit/BASE);
             digits[numdigits] = static_cast<char>((other % digit)/ (digit/BASE));
             numdigits++;
             digit *= BASE;
@@ -246,18 +243,14 @@ huge huge::operator+(const huge & rhs) const
     }
     if (sign == -1 && rhs.sign == 1)
     {
-       // cerr << "\nCalling object is negative...";
         storage = *this;
         storage.sign = 1;
-       // cerr << "\nStorage now holds: " << storage;
         temp = rhs - storage;
     }
     else if ((sign == 1 || sign == 0) && rhs.sign == 1)
     {
-        //cerr << "\nCalling object is positive...";
         while (i<longest)
         {
-            //cerr << "\nAdding digits: " << i;
             temp.digits[i] = static_cast<char>(digits[i] + rhs.digits[i] + carry);
             if (temp.digits[i] > 9)
             {
@@ -279,7 +272,6 @@ huge huge::operator+(const huge & rhs) const
     }
     else if (sign == 1 && rhs.sign == -1)
     {
-        //cerr << "\nright hand object is negative...";
         storage = rhs;
         storage.sign = 1;
         temp = *this - storage;
@@ -304,8 +296,6 @@ huge huge::operator-(const huge & rhs) const
     huge temp, storage, storage2; 
     char carry = 0;
     size_t i=0, longest;
-    //cerr << "\nat least got into - operator!";
-    //cin.ignore(INT_MAX, '\n');
     
     if (numdigits >= rhs.numdigits)
     {
@@ -315,52 +305,10 @@ huge huge::operator-(const huge & rhs) const
     {
         longest = rhs.numdigits;
     }
-    /*if (numdigits == 1 && rhs.numdigits == 1 && sign ==1 && rhs.sign == 1 )
+    if (*this > rhs && (sign == 1 && rhs.sign ==1))
     {
-        if (digits[0] > rhs.digits[0])
-        {
-            temp.digits[0] = digits[0] - rhs.digits[0];
-            temp.sign = 1;
-        }
-        else if (rhs.digits[0] > digits[0])
-        {
-            temp.digits[0] = rhs.digits[0] - digits[0];
-            temp.sign = -1;
-        }
-        else
-        {
-            temp.digits[0] = 0;
-            temp.sign = 0;
-        }
-        temp.numdigits = 1;
-    }
-    else if (rhs.numdigits == 1 && sign ==1 && rhs.sign == 1)
-    {
-        if (digits[0] >= rhs.digits[0])
-        {
-            temp = *this;
-            temp.digits[0] = digits[0] - rhs.digits[0];
-            temp.sign = 1;
-        }
-        else 
-        {
-            temp = *this;
-            temp.digits[0] = 10 - (rhs.digits[0] - digits[0]);
-            if (temp.digits[1] > 0)
-            {
-                temp.digits[1]--;
-            }
-           
-        }
-        
-        
-    }
-    else*/ if (*this > rhs && (sign == 1 && rhs.sign ==1))
-    {
-        //cerr << "\nBoth objects are positive, left hand operand is larger";
         while (i<longest)
         {
-          //  cerr << "\nworking on " << static_cast<short>(digits[i]) << " and " << static_cast<short>(rhs.digits[i]);
             if (digits[i]-carry < rhs.digits[i])
             {
                 temp.digits[i] = static_cast<char>((digits[i]+10-carry) - rhs.digits[i]);
@@ -382,17 +330,14 @@ huge huge::operator-(const huge & rhs) const
         {
             temp.sign = 1;
         }
-       // cerr << "\nTemp = " << temp;
     }
     else if (rhs > *this && (sign == 1 && rhs.sign ==1))
     {
-        //cerr << "\nBoth objects are positive, right hand operand is larger";
         temp = rhs - *this;
         temp.sign = -1;
     }
     else if (sign == -1 && rhs.sign == -1)
     {
-       // cerr << "\nBoth objects are negative";
         storage = *this;
         storage.sign = 1;
         storage2 = rhs;
@@ -402,8 +347,6 @@ huge huge::operator-(const huge & rhs) const
     }
     else if (sign == -1 && rhs.sign == 1)
     {
-
-        //cerr << "\nleft hand operand is negative";
         storage = *this;
         storage.sign = 1;
         temp = storage + rhs;
@@ -411,7 +354,6 @@ huge huge::operator-(const huge & rhs) const
     }
     else if (sign == 1 && rhs.sign == -1)
     {
-        //cerr << "\nRight hand operand is negative";
         storage = rhs;
         storage.sign = 1;
         temp = *this + storage;
@@ -431,20 +373,16 @@ huge huge::operator-(const huge & rhs) const
         temp.sign = -1;
     }
 
-    //cerr << "\nBut did we get out....?";
-   i = temp.numdigits-1;
-   while(i > 1 && temp.digits[i] == 0)
-   {
-       temp.numdigits--;
-       i--;
-   }
-   //cerr << "\ntemp == " << temp;
+    i = temp.numdigits-1;
+    while(i > 1 && temp.digits[i] == 0)
+    {
+        temp.numdigits--;
+        i--;
+    }
     if (temp.numdigits == 2 && temp.digits[1] == 0)
     {
         temp.numdigits--;
     }
-   // cerr << "\ntemp = " << temp;
-   //cerr << "\nResult for now = " << temp;
     return temp; 
 }
 
@@ -532,11 +470,9 @@ huge huge::operator/(const huge & divisor) const
         tempquotient = static_cast<long>(10);
         while((divisor * tempquotient) > tempdividend)
         {
-            //cerr << "\n" << (divisor*tempquotient) << " is greater than " << tempdividend;
             tempquotient--;
         }
         quotient.lsb_push(tempquotient.digits[0]);
-        //cerr << "\nAppending: " << tempquotient.digits[0];
         tempremainder = tempdividend - (tempquotient*divisor);
     }
     quotient.sign = (sign == divisor.sign) ? 1 : -1;
@@ -595,17 +531,12 @@ huge huge::lsb_push(const char & digit)
 
 vector<huge> strtohuge(string word)
 {
-	cerr << "Got into strtohuge...\n";
 	huge temp, holder, multiplier, base("256");
     vector<huge> cont;
     char hundreds, tens, ones;
 	string::size_type i=0, k=0, numChunks = 0, remainder=0;
 	numChunks = word.size() / CHUNK_SIZE;
 	remainder = word.size() % CHUNK_SIZE; 
-	cerr << "Chunk Size is " << CHUNK_SIZE << "\n";
-	cerr << "Word is " << word << "\n";
-	cerr << "Word divided into " << numChunks 
-		 << " parts with final partial chunk of size " << remainder << "\n";
 
 	temp = 0;
 	k = 0;
@@ -614,18 +545,11 @@ vector<huge> strtohuge(string word)
 	{
 		k = 0;
 		temp = 0;
-		cerr << "Splitting!\n";
 	    while (k<CHUNK_SIZE)
    		{
-			cerr << "Processing char: " << word[(i*CHUNK_SIZE)+k] 
-				 << " (" << static_cast<int>(word[(i*CHUNK_SIZE)+k]) << ") " 
-				 << " into degree " << k << " term...\n";
 			multiplier = hugePow(base, k);
-			cerr << "multiplier = " << multiplier << "\n";
 			holder = multiplier * static_cast<int>(word[(i*CHUNK_SIZE)+k]);
-			cerr << "adding " << holder << " to " << temp << "\n";
         	temp = temp + holder;
-			cerr << "now temp = " << temp << "\n";
 			k++;
     	}
 		cont.push_back(temp);
@@ -637,13 +561,10 @@ vector<huge> strtohuge(string word)
 	// process remaining partial chunk and pad with zeros
 	while (k < remainder)
 	{
-			cerr << "Processing char: " << word[(i*CHUNK_SIZE)+k] 
-				 << " (" << static_cast<int>(word[(i*CHUNK_SIZE)+k]) << ") " 
-				 << " into degree " << k << " term...\n";
-			multiplier = hugePow(base, k);
-			holder = multiplier * static_cast<int>(word[(i*CHUNK_SIZE)+k]);
-        	temp = temp + holder;
-			k++;		
+		multiplier = hugePow(base, k);
+		holder = multiplier * static_cast<int>(word[(i*CHUNK_SIZE)+k]);
+        temp = temp + holder;
+		k++;		
 	}
 	if (remainder > 0)
 	{	
